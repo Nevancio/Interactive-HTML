@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>MTA New York — Transit Profile</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: #f0f4ff; color: #1f2328; font-size: 14px; line-height: 1.7; }
+  .page { max-width: 820px; margin: 0 auto; padding: 40px 24px 60px; }
+  .profile-header { background: linear-gradient(135deg, #b45309 0%, #f59e0b 100%); border-radius: 16px; padding: 32px 36px; color: #fff; margin-bottom: 32px; display: flex; align-items: center; gap: 24px; }
+  .profile-flag { font-size: 64px; }
+  .profile-header h1 { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+  .profile-header .sub { font-size: 13px; color: #fef3c7; margin-bottom: 12px; }
+  .rank-badge { display: inline-block; background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.4); border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 700; }
+  .score-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 32px; }
+  .score-box { background: #fff; border-radius: 12px; padding: 14px 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,.06); border-top: 4px solid #f59e0b; }
+  .score-box .sb-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 4px; }
+  .score-box .sb-val { font-size: 24px; font-weight: 800; }
+  .score-box .sb-max { font-size: 10px; color: #94a3b8; }
+  .score-box.overall { border-top-color: #f59e0b; background: #fffbeb; }
+  .score-box.overall .sb-val { color: #b45309; }
+  .section { background: #fff; border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+  .section-eyebrow { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #b45309; margin-bottom: 6px; }
+  .section h2 { font-size: 17px; font-weight: 800; color: #1e293b; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; }
+  .section p { font-size: 13px; color: #374151; margin-bottom: 10px; }
+  .section p:last-child { margin-bottom: 0; }
+  .highlight-item { margin-bottom: 14px; padding-left: 14px; border-left: 3px solid #f59e0b; }
+  .highlight-item .hi-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #b45309; margin-bottom: 3px; }
+  .opp-list { list-style: none; padding: 0; }
+  .opp-list li { padding: 8px 12px 8px 36px; position: relative; font-size: 13px; color: #374151; border-bottom: 1px solid #f8fafc; }
+  .opp-list li:last-child { border-bottom: none; }
+  .opp-list li::before { content: '→'; position: absolute; left: 12px; color: #b45309; font-weight: 700; }
+  .journey-row { display: flex; gap: 0; margin: 16px 0; }
+  .jp { flex: 1; text-align: center; position: relative; }
+  .jp::after { content: '▶'; position: absolute; right: -8px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #cbd5e1; }
+  .jp:last-child::after { display: none; }
+  .jp-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #64748b; margin-bottom: 5px; }
+  .jp-dot { width: 16px; height: 16px; border-radius: 50%; margin: 0 auto 5px; }
+  .jp-green { background: #22c55e; } .jp-yellow { background: #f59e0b; } .jp-red { background: #ef4444; }
+  .jp-note { font-size: 10px; color: #64748b; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+  .pill { background: #fef3c7; color: #92400e; border-radius: 20px; font-size: 11px; font-weight: 700; padding: 3px 11px; }
+  .innovation-box { background: #fffbeb; border: 1.5px solid #fcd34d; border-radius: 10px; padding: 16px 20px; margin-top: 10px; }
+  .warn-box { background: #fff7ed; border: 1.5px solid #fdba74; border-radius: 10px; padding: 16px 20px; margin-top: 10px; }
+  .innovation-box p, .warn-box p { font-size: 13px; color: #374151; }
+  .overall-section { background: linear-gradient(135deg, #b45309, #f59e0b); border-radius: 14px; padding: 28px; text-align: center; color: #fff; margin-bottom: 20px; }
+  .overall-section .os-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #fef3c7; margin-bottom: 8px; }
+  .overall-section .os-num { font-size: 72px; font-weight: 900; line-height: 1; }
+  .overall-section .os-max { font-size: 18px; color: #fde68a; }
+  .overall-section .os-verdict { font-size: 14px; color: #fef3c7; margin-top: 10px; font-style: italic; }
+  .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+  .nav-btn { background: #1e293b; color: #fff; border: none; border-radius: 10px; padding: 10px 22px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-block; }
+  .nav-btn:hover { background: #334155; }
+  .nav-btn.home { background: #b45309; }
+  .footer { margin-top: 40px; padding-top: 12px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #94a3b8; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="profile-header">
+    <div class="profile-flag">🗽</div>
+    <div>
+      <h1>MTA New York</h1>
+      <div class="sub">Metropolitan Transportation Authority · USA — New York</div>
+      <span class="rank-badge">#6 Ranked Globally</span>
+    </div>
+  </div>
+  <div class="score-strip">
+    <div class="score-box"><div class="sb-label">Technology</div><div class="sb-val" style="color:#f59e0b">68</div><div class="sb-max">/100</div></div>
+    <div class="score-box"><div class="sb-label">User Experience</div><div class="sb-val" style="color:#f59e0b">65</div><div class="sb-max">/100</div></div>
+    <div class="score-box"><div class="sb-label">Silo Integration</div><div class="sb-val" style="color:#f59e0b">62</div><div class="sb-max">/100</div></div>
+    <div class="score-box"><div class="sb-label">Revenue Model</div><div class="sb-val" style="color:#f59e0b">75</div><div class="sb-max">/100</div></div>
+    <div class="score-box overall"><div class="sb-label">Overall</div><div class="sb-val">68</div><div class="sb-max">/100</div></div>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">World-Class Experience Characteristics</div>
+    <h2>Scale and Legacy: America's Most Complex Transit System in Transition</h2>
+    <p>The MTA operates the most complex transit network in the United States — 472 subway stations, 5,800+ bus stops, two commuter rail lines (LIRR and Metro-North), and multiple inter-agency connections. This scale creates both extraordinary coverage and extraordinary operational complexity. The MTA's OMNY contactless payment rollout is the most ambitious transit modernization project in US history, replacing the MetroCard system with open-loop contactless acceptance across the entire network. OMNY represents a direct model for a statewide North Carolina contactless standard across GoRaleigh, GoTriangle, CATS, GoDurham, GoCary, Greensboro Transit, and other NC operators — coordinated through NCDOT PTD. Source: <a href="https://www.ncdot.gov/about-us/how-we-operate/finance-budget/Pages/default.aspx" style="color:#b45309;">NCDOT PTD</a></p>
+    <p>The MTA's open data program has been transformative for the third-party app ecosystem. GTFS-RT feeds power Citymapper, Transit App, Google Maps, and dozens of other applications that collectively serve millions of daily riders with real-time subway arrival information. This open data philosophy — pioneered in the US by the MTA — has created a de facto standard that other US agencies have followed.</p>
+    <div class="highlight-item">
+      <div class="hi-label">Technology Stack</div>
+      <p>OMNY contactless EMV acceptance across all 472 subway stations and 5,800+ bus stops (rollout completing 2024). Legacy MetroCard infrastructure still in parallel operation. Real-time GTFS-RT feeds for subway and buses. MTA Bus Time provides real-time bus tracking with 1-minute accuracy. MyMTA app aggregates subway, bus, LIRR, and Metro-North information. Aging signal systems on legacy IND/BMT lines limiting real-time train position accuracy.</p>
+    </div>
+    <div class="highlight-item">
+      <div class="hi-label">User Experience</div>
+      <p>OMNY's tap-and-go simplicity is a genuine UX improvement over MetroCard for most riders. Fare-capping is a rider-friendly OMNY feature that prevents riders from overpaying — the weekly cap is set at $34 (equivalent to the 7-day unlimited MetroCard price), with a daily cap applying per day of use. Verify current cap structure at MTA.info as these figures are subject to fare adjustments. However, the app experience across MTA's properties remains fragmented — subway, LIRR, Metro-North, and bus each have partially separate digital experiences with inconsistent real-time data quality.</p>
+    </div>
+    <div class="highlight-item">
+      <div class="hi-label">Infrastructure Challenge</div>
+      <p>The MTA's aging signal infrastructure — much of it dating to the 1930s on legacy lines — is the single largest constraint on digital modernization. Without accurate real-time train position data from modern communications-based train control (CBTC), the precision of arrival predictions and crowding data remains limited on many lines. The MTA's $54 billion 2020–2024 capital program includes significant signal modernization investment.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Opportunity Areas</div>
+    <h2>Where MTA New York Must Improve</h2>
+    <ul class="opp-list">
+      <li>Complete OMNY rollout and retire MetroCard entirely — running two parallel fare payment systems simultaneously creates operational complexity and rider confusion.</li>
+      <li>Unify LIRR, Metro-North, and Subway under a single passenger-facing app with consistent UX and integrated journey planning across all MTA modes.</li>
+      <li>Deploy real-time crowding data by subway car — Seoul Metro achieved this in 2019; MTA has the passenger counting infrastructure but has not yet surfaced this data to riders.</li>
+      <li>Build a post-journey loyalty and rewards layer — OMNY's tap-and-go data provides a complete picture of every rider's journey history, creating a foundation for personalization that is currently unused.</li>
+      <li>Accelerate CBTC signal modernization on remaining legacy lines to unlock precise real-time train positioning data.</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Centricity on Customer Needs</div>
+    <h2>Scale vs. Fragmentation: A System at a Crossroads</h2>
+    <p>The MTA's challenge is that its scale — which should be its greatest asset — is currently expressed as fragmentation rather than integration. A rider commuting from Long Island to Manhattan navigates multiple fare systems and separate apps. North Carolina's equivalent fragmentation problem is even more acute: a rider crossing from GoRaleigh (Raleigh) to GoTriangle to GoCary in the Triangle, or CATS (Charlotte) to surrounding operators, faces entirely separate agencies with no shared fare product at scale. The Triangle's GoTriangle GoPass/UMO pilot is NC's closest current answer — but the MTA's OMNY rollout shows what state-level coordination with full contactless integration looks like. Source: <a href="https://connect.ncdot.gov/business/Transit/Pages/default.aspx" style="color:#b45309;">NCDOT PTD operator list</a></p>
+    <p>Where the MTA excels is in raw information availability. Real-time bus tracking, subway countdown clocks (on CBTC lines), and the open data ecosystem mean that informed riders can plan effectively using third-party apps. However, the MTA's own digital touchpoints — MTA.info, MyMTA app, station signage — remain inconsistent in quality and often lag behind third-party app experiences built on the same underlying data.</p>
+    <div class="warn-box">
+      <p><strong>Key Gap vs. Best Practice:</strong> The MTA has the data but not the unified platform to deliver it coherently. Singapore, Zürich, and London have built single digital front doors to their networks. The MTA has the raw ingredients — OMNY data, GTFS-RT, passenger counts — but lacks the integration layer to turn them into a Singapore-style rider experience.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Commerce &amp; Revenue Generation</div>
+    <h2>New Revenue Models Emerging — But Subsidy Dependence Remains</h2>
+    <p>The MTA has historically been heavily dependent on government subsidies and fare revenue, with limited development of the non-fare revenue streams that sustain peer systems like TfL and JR East. This is changing — the MTA is pursuing several new revenue initiatives that could meaningfully diversify its income base.</p>
+    <div class="pill-row">
+      <span class="pill">Fare Revenue</span>
+      <span class="pill">Government Subsidies</span>
+      <span class="pill">Congestion Pricing (NYC)</span>
+      <span class="pill">Advertising (OOH + Digital)</span>
+      <span class="pill">Real Estate (Penn Station area)</span>
+      <span class="pill">Naming Rights</span>
+    </div>
+    <p>New York City's congestion pricing program — charging vehicles entering Manhattan below 60th Street — is projected in the benchmark to generate $1 billion+ annually for MTA capital investment capacity (via bonding on ~$500–600M in toll revenue). The program launched in modified form in January 2025 after a temporary pause in June 2024. This is the most significant new non-fare revenue initiative in US transit history and is directly modeled on TfL's London Congestion Charge. For North Carolina: congestion pricing on I-77 (Charlotte) or I-40/I-85 (Triangle) corridors — with transit revenue allocation — is the policy aspiration modeled on MTA's NYC example. Sources: <a href="https://new.mta.info/article/68893" style="color:#b45309;">MTA Congestion Pricing</a> · <a href="https://ncdot.gov/projects/i-77-south-express-lanes/Documents/i-77-south-rfq.pdf" style="color:#b45309;">NC I-77 South Project</a></p>
+    <div class="innovation-box">
+      <p><strong>Key Stat:</strong> MTA annual budget approximately $19 billion. Fare revenue covers ~35% of operating costs. Congestion pricing is projected to generate $1B+ annually in capital investment capacity if sustained — a transformative new revenue stream subject to political and operational implementation. Source: MTA FY2024 Budget; NYC Congestion Pricing program documentation.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Data Silo Connectivity — Pre · During · Post Transit</div>
+    <h2>Improving Pre and During — Post-Journey Completely Absent</h2>
+    <div class="journey-row">
+      <div class="jp"><div class="jp-label">Pre-Transit</div><div class="jp-dot jp-yellow"></div><div class="jp-note">⚠️ Partial</div></div>
+      <div class="jp"><div class="jp-label">During Transit</div><div class="jp-dot jp-yellow"></div><div class="jp-note">⚠️ Partial</div></div>
+      <div class="jp"><div class="jp-label">Post-Transit</div><div class="jp-dot jp-red"></div><div class="jp-note">❌ Fragmented</div></div>
+    </div>
+    <p><strong>Pre-Transit:</strong> OMNY purchase and MyMTA app provide basic pre-trip planning. LIRR and Metro-North ticketing remain partially separate. No unified multi-modal pre-trip booking.</p>
+    <p><strong>During Transit:</strong> GTFS-RT solid for CBTC-equipped lines; less reliable on legacy signal infrastructure. MTA Bus Time accurate. Service alerts inconsistent across modes.</p>
+    <p><strong>Post-Transit:</strong> No post-journey experience, no loyalty program, no personalization layer, and no AI-driven recommendations. OMNY transaction data exists but is not surfaced to riders in any meaningful way.</p>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Notable Innovation</div>
+    <h2>OMNY: America's Largest Contactless Transit Rollout</h2>
+    <div class="innovation-box">
+      <p>OMNY represents the most ambitious contactless payment rollout in US transit history — accepting Visa, Mastercard, Amex, Apple Pay, Google Pay, and Samsung Pay across 472 stations and 5,800+ bus stops. The daily fare cap feature (no matter how many rides taken, daily cost capped at one-day unlimited price) is a genuine rider-friendly innovation that reduces the mental overhead of fare management. When fully operational, OMNY will generate complete journey data for every rider — creating a foundation for personalization, loyalty, and demand management that the MTA has not yet begun to exploit.</p>
+    </div>
+  </div>
+  <div class="overall-section">
+    <div class="os-label">Overall Benchmarking Score</div>
+    <div class="os-num">68<span class="os-max">/100</span></div>
+    <div class="os-verdict">"A system with world-class scale and improving data infrastructure — but still fragmented across modes. OMNY creates the foundation; the integration layer is the missing piece."</div>
+  </div>
+  <div class="nav-row">
+    <span style="font-size:12px;color:#94a3b8;">6 of 9 · MTA New York</span>
+    <div style="display:flex;gap:10px;">
+      <a class="nav-btn" href="tokyo-jr-east.html">← Tokyo JR East</a>
+      <a class="nav-btn home" href="../one-pager-benchmarking-NCDOT.html">Rankings</a>
+      <a class="nav-btn" href="../revenue-deep-dive.html" style="background:#059669;">Revenue Deep Dive</a>
+      <a class="nav-btn" href="wmata-dc.html">Next: WMATA DC →</a>
+    </div>
+  </div>
+  <div class="footer">Made with IBM Bob · NCDOT Benchmarking Research 2024</div>
+</div>
+</body>
+</html>

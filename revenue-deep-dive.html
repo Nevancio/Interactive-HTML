@@ -1,0 +1,802 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Transit Revenue Deep Dive — NCDOT Benchmarking</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: #f0f4ff; color: #1f2328; font-size: 14px; line-height: 1.7; }
+
+  /* HERO */
+  .hero {
+    background: linear-gradient(135deg, #064e3b 0%, #065f46 50%, #047857 100%);
+    color: #fff; padding: 48px 24px 36px; text-align: center;
+  }
+  .hero .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: #6ee7b7; margin-bottom: 10px; }
+  .hero h1 { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+  .hero h1 span { color: #34d399; }
+  .hero p { font-size: 13px; color: #a7f3d0; max-width: 640px; margin: 0 auto 24px; }
+  .hero-nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; max-width: 860px; margin: 0 auto; }
+  .hn-chip {
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25);
+    border-radius: 20px; padding: 6px 14px; font-size: 11px; font-weight: 700;
+    color: #fff; text-decoration: none; display: inline-block;
+    transition: background .2s, transform .15s;
+  }
+  .hn-chip:hover { background: rgba(255,255,255,.28); transform: translateY(-2px); }
+
+  /* MAIN */
+  .main { max-width: 920px; margin: 0 auto; padding: 36px 20px 60px; }
+
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: #57606a; margin-bottom: 14px; padding-bottom: 7px;
+    border-bottom: 2px solid #059669; display: flex; align-items: center; gap: 8px;
+  }
+  .section-label .dot { width: 8px; height: 8px; border-radius: 50%; background: #059669; }
+
+  /* SUMMARY STRIP */
+  .summary-strip { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 40px; }
+  .ss-card { background: #fff; border-radius: 12px; padding: 18px 14px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,.07); border-top: 4px solid #059669; }
+  .ss-card .ss-val { font-size: 28px; font-weight: 800; color: #059669; }
+  .ss-card .ss-label { font-size: 11px; color: #64748b; font-weight: 600; margin-top: 4px; }
+  .ss-card .ss-sub { font-size: 10px; color: #94a3b8; margin-top: 2px; }
+
+  /* FARE RECOVERY TABLE */
+  .section { margin-bottom: 44px; }
+  .table-wrap { background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 4px 24px rgba(0,0,0,.08); }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th { padding: 11px 16px; background: #1e293b; color: #94a3b8; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; text-align: left; }
+  td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tbody tr { cursor: default; transition: background .15s; }
+  tbody tr:hover td { background: #f0fdf4; }
+  .sys-cell { font-weight: 700; display: flex; align-items: center; gap: 8px; }
+  .tag { display: inline-block; font-size: 10px; font-weight: 700; border-radius: 20px; padding: 2px 9px; white-space: nowrap; }
+  .tag-green  { background: #dcfce7; color: #166534; }
+  .tag-yellow { background: #fef9c3; color: #854d0e; }
+  .tag-red    { background: #fee2e2; color: #991b1b; }
+
+  /* FARE BAR */
+  .fare-bar-wrap { width: 160px; }
+  .fare-bar-bg { background: #f1f5f9; border-radius: 4px; height: 10px; overflow: hidden; margin-bottom: 3px; }
+  .fare-bar-fill { height: 100%; border-radius: 4px; }
+  .fare-pct { font-size: 11px; font-weight: 700; }
+
+  /* SYSTEM REVENUE CARDS */
+  .rev-cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px,1fr)); gap: 18px; margin-bottom: 44px; }
+  .rev-card {
+    background: #fff; border-radius: 14px; overflow: hidden;
+    box-shadow: 0 2px 16px rgba(0,0,0,.07);
+    transition: transform .15s, box-shadow .2s;
+  }
+  .rev-card:hover { transform: translateY(-3px); box-shadow: 0 8px 32px rgba(0,0,0,.12); }
+  .rc-header { padding: 16px 20px 12px; border-bottom: 1px solid #f1f5f9; }
+  .rc-header-top { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+  .rc-flag { font-size: 28px; }
+  .rc-title h3 { font-size: 14px; font-weight: 800; }
+  .rc-title .rc-sub { font-size: 11px; color: #64748b; }
+  .rc-score { margin-left: auto; text-align: right; }
+  .rc-score .rs-num { font-size: 22px; font-weight: 800; }
+  .rc-score .rs-lbl { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: .06em; }
+
+  /* donut-like fare ratio bar */
+  .ratio-bar { height: 8px; border-radius: 4px; overflow: hidden; display: flex; margin: 10px 0 4px; }
+  .ratio-fare { background: #059669; }
+  .ratio-nonfar { background: #34d399; }
+  .ratio-subsidy { background: #e5e7eb; }
+  .ratio-legend { display: flex; gap: 12px; flex-wrap: wrap; }
+  .rl-item { display: flex; align-items: center; gap: 4px; font-size: 10px; color: #64748b; }
+  .rl-dot { width: 8px; height: 8px; border-radius: 2px; flex-shrink: 0; }
+
+  .rc-streams { padding: 12px 20px; border-bottom: 1px solid #f1f5f9; }
+  .rc-streams-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 8px; }
+  .stream-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+  .stream-icon { font-size: 14px; width: 20px; text-align: center; flex-shrink: 0; }
+  .stream-name { font-size: 12px; color: #374151; flex: 1; }
+  .stream-tag { font-size: 10px; font-weight: 700; border-radius: 10px; padding: 1px 8px; }
+  .st-core { background: #dcfce7; color: #166534; }
+  .st-grow { background: #dbeafe; color: #1e40af; }
+  .st-new  { background: #f3e8ff; color: #6b21a8; }
+  .st-miss { background: #fee2e2; color: #991b1b; }
+
+  .rc-insight { padding: 12px 20px 16px; background: #f8fafc; }
+  .rc-insight .ri-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 5px; }
+  .rc-insight p { font-size: 12px; color: #374151; line-height: 1.6; }
+
+  /* NCDOT opportunity table */
+  .opp-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 44px; }
+  .opp-card { background: #fff; border-radius: 12px; padding: 18px; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+  .opp-card .oc-icon { font-size: 28px; margin-bottom: 8px; }
+  .opp-card .oc-title { font-size: 13px; font-weight: 800; color: #1e293b; margin-bottom: 4px; }
+  .opp-card .oc-model { font-size: 10px; font-weight: 700; color: #059669; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+  .opp-card .oc-desc { font-size: 12px; color: #374151; margin-bottom: 10px; line-height: 1.6; }
+  .opp-card .oc-potential { font-size: 11px; font-weight: 700; color: #065f46; background: #ecfdf5; border-radius: 6px; padding: 5px 10px; display: inline-block; }
+
+  /* comparison callout */
+  .compare-callout {
+    background: linear-gradient(135deg, #fef2f2, #fff5f5);
+    border: 2px solid #fca5a5; border-radius: 14px;
+    padding: 24px 28px; margin-bottom: 44px;
+  }
+  .compare-callout h3 { font-size: 16px; font-weight: 800; color: #dc2626; margin-bottom: 10px; }
+  .compare-callout p { font-size: 13px; color: #374151; margin-bottom: 10px; }
+  .compare-callout p:last-child { margin-bottom: 0; }
+  .cc-stat-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin: 16px 0; }
+  .cc-stat { text-align: center; background: #fff; border-radius: 10px; padding: 12px; border: 1px solid #fca5a5; }
+  .cc-stat .cs-val { font-size: 22px; font-weight: 800; color: #dc2626; }
+  .cc-stat .cs-lbl { font-size: 10px; color: #64748b; font-weight: 600; }
+
+  /* roadmap */
+  .roadmap-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 14px; margin-bottom: 44px; }
+  .rm-card { border-radius: 12px; padding: 18px; }
+  .rm-card .rm-phase { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .1em; margin-bottom: 8px; }
+  .rm-card h4 { font-size: 13px; font-weight: 800; margin-bottom: 10px; }
+  .rm-card ul { padding-left: 16px; font-size: 12px; color: #374151; }
+  .rm-card ul li { margin-bottom: 5px; }
+  .rm-near  { background: #fef2f2; border: 1.5px solid #fca5a5; }
+  .rm-near .rm-phase, .rm-near h4 { color: #dc2626; }
+  .rm-mid   { background: #fff7ed; border: 1.5px solid #fdba74; }
+  .rm-mid .rm-phase, .rm-mid h4 { color: #c2410c; }
+  .rm-long  { background: #f0fdf4; border: 1.5px solid #86efac; }
+  .rm-long .rm-phase, .rm-long h4 { color: #166534; }
+
+  /* back link */
+  .back-bar { display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; }
+  .back-btn {
+    display: inline-block; background: #fff; border: 1.5px solid #e2e8f0;
+    border-radius: 10px; padding: 8px 16px; font-size: 12px; font-weight: 700;
+    text-decoration: none; color: #374151; transition: all .15s;
+  }
+  .back-btn:hover { border-color: #059669; color: #059669; }
+  .back-btn.primary { background: #059669; color: #fff; border-color: #059669; }
+  .back-btn.primary:hover { background: #047857; }
+
+  .footer { margin-top: 48px; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="eyebrow">IBM Benchmarking Research · 2024 · Task 3</div>
+  <h1>Transit Revenue <span>Deep Dive</span></h1>
+  <p>How 9 global transit systems generate revenue — fare vs. non-fare breakdowns, key partnerships, and a prioritized roadmap for North Carolina (NCDOT and NC operators) to coordinate and diversify their revenue base.</p>
+  <div class="hero-nav">
+    <a class="hn-chip" href="one-pager-benchmarking-NCDOT.html">← Rankings Dashboard</a>
+    <a class="hn-chip" href="#section-fare">Fare Recovery</a>
+    <a class="hn-chip" href="#section-profiles">System Profiles</a>
+    <a class="hn-chip" href="#section-ncdot">NCDOT Opportunity</a>
+    <a class="hn-chip" href="#section-roadmap">Revenue Roadmap</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <!-- BACK LINKS -->
+  <div class="back-bar" style="margin-top:8px;">
+    <a class="back-btn primary" href="one-pager-benchmarking-NCDOT.html">← Rankings Dashboard</a>
+    <a class="back-btn" href="profiles/singapore-lta.html">🇸🇬 Singapore</a>
+    <a class="back-btn" href="profiles/zurich-sbb.html">🇨🇭 Zürich</a>
+    <a class="back-btn" href="profiles/london-tfl.html">🇬🇧 London</a>
+    <a class="back-btn" href="profiles/seoul-metro.html">🇰🇷 Seoul</a>
+    <a class="back-btn" href="profiles/tokyo-jr-east.html">🇯🇵 Tokyo</a>
+    <a class="back-btn" href="profiles/mta-nyc.html">🗽 MTA</a>
+    <a class="back-btn" href="profiles/wmata-dc.html">🏛️ WMATA</a>
+    <a class="back-btn" href="profiles/la-metro.html">🌴 LA Metro</a>
+    <a class="back-btn" href="profiles/ncdot.html">🚌 NCDOT</a>
+  </div>
+
+  <!-- SUMMARY STRIP -->
+  <div class="summary-strip">
+    <div class="ss-card">
+      <div class="ss-val">92</div>
+      <div class="ss-label">Highest Revenue Score</div>
+      <div class="ss-sub">Tokyo JR East</div>
+    </div>
+    <div class="ss-card">
+      <div class="ss-val">35</div>
+      <div class="ss-label">NCDOT Revenue Score</div>
+      <div class="ss-sub">57 pts below leader</div>
+    </div>
+    <div class="ss-card" style="border-top-color:#dc2626;">
+      <div class="ss-val" style="color:#dc2626;">~25%</div>
+      <div class="ss-label">NC Avg. Fare Recovery</div>
+      <div class="ss-sub">vs. 60%+ at top peers [TO BE VERIFIED via NCDOT UPTAS]</div>
+    </div>
+    <div class="ss-card" style="border-top-color:#3b82f6;">
+      <div class="ss-val" style="color:#3b82f6;">$0</div>
+      <div class="ss-label">NC Statewide Data Licensing Rev.</div>
+      <div class="ss-sub">London TfL attributes ~42% of total revenue to non-fare commercial streams — the global benchmark for NC to pursue</div>
+    </div>
+  </div>
+
+  <!-- FARE RECOVERY TABLE -->
+  <div class="section" id="section-fare">
+    <div class="section-label"><div class="dot"></div>Fare Recovery Ratios &amp; Government Dependency — All 9 Systems</div>
+    <div style="background:#fef9c3;border:1px solid #f59e0b;border-radius:10px;padding:12px 16px;margin-bottom:14px;font-size:12px;color:#374151;line-height:1.6;">
+      <strong>Important context:</strong> Every transit system in this benchmark receives some form of government support — either operating subsidy, capital funding, asset ownership, or legally protected dedicated taxes. The key differences are <em>how much</em>, <em>what type</em>, and <em>how stable</em> that support is. Fare recovery ratio measures fares vs. operating costs only — it does not capture government-owned infrastructure (Singapore, Zürich) or voter-locked dedicated taxes (LA Metro).
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>System</th>
+            <th>Annual Budget (approx.)</th>
+            <th>Fare Recovery</th>
+            <th>Govt Support Type</th>
+            <th>Key Non-Fare &amp; Subsidy Sources</th>
+            <th>Revenue Score</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="sys-cell">🇯🇵 Tokyo JR East</div></td>
+            <td>~$10B USD (¥1.5T)</td>
+            <td>
+              <div class="fare-bar-wrap">
+                <div class="fare-bar-bg"><div class="fare-bar-fill" style="width:60%;background:#22c55e;"></div></div>
+                <div class="fare-pct" style="color:#16a34a;">~60%</div>
+              </div>
+            </td>
+            <td><span class="tag tag-green">Privatized — minimal subsidy</span></td>
+            <td>Suica fees · Station retail · Real estate · IT licensing · ~2% legacy infrastructure grants</td>
+            <td><strong style="color:#16a34a;">92/100</strong></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🇨🇭 Zürich SBB/ZVV</div></td>
+            <td>~$9B CHF</td>
+            <td>
+              <div class="fare-bar-wrap">
+                <div class="fare-bar-bg"><div class="fare-bar-fill" style="width:60%;background:#22c55e;"></div></div>
+                <div class="fare-pct" style="color:#16a34a;">~60%</div>
+              </div>
+            </td>
+            <td><span class="tag tag-yellow">~32% govt infrastructure subsidy</span></td>
+            <td>Freight · Real estate · Int'l passes · ~32% federal/cantonal infra grants</td>
+            <td><strong style="color:#16a34a;">85/100</strong></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🇸🇬 Singapore LTA</div></td>
+            <td>~$2.5B SGD</td>
+            <td>
+              <div class="fare-bar-wrap">
+                <div class="fare-bar-bg"><div class="fare-bar-fill" style="width:55%;background:#f59e0b;"></div></div>
+                  <div class="fare-pct" style="color:#b45309;">~55%</div>
+              </div>
+            </td>
+            <td><span class="tag tag-yellow">~20% hidden govt capital support</span></td>
+            <td>Retail concessions · Advertising · Property · ~20% NRFF/BCM capital transfers</td>
+            <td><strong style="color:#16a34a;">90/100</strong></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🇬🇧 London TfL</div></td>
+            <td>~£12B</td>
+            <td>
+              <div class="fare-bar-wrap">
+                <div class="fare-bar-bg"><div class="fare-bar-fill" style="width:42%;background:#f59e0b;"></div></div>
+                <div class="fare-pct" style="color:#b45309;">~42%</div>
+              </div>
+            </td>
+            <td><span class="tag tag-yellow">Supplemented</span></td>
+            <td>Congestion charge · ULEZ · Advertising · Property · Data APIs</td>
+            <td><strong style="color:#16a34a;">88/100</strong></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🇰🇷 Seoul Metro</div></td>
+            <td>~$4B USD</td>
+            <td>
+              <div class="fare-bar-wrap">
+                <div class="fare-bar-bg"><div class="fare-bar-fill" style="width:55%;background:#22c55e;"></div></div>
+                <div class="fare-pct" style="color:#16a34a;">~55%</div>
+              </div>
+            </td>
+            <td><span class="tag tag-yellow">~35% city operating subsidy</span></td>
+            <td>T-money fees · Station retail · Advertising · ~35% Seoul Metro Gov subsidy</td>
+            <td><strong style="color:#16a34a;">80/100</strong></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🗽 MTA New York</div></td>
+            <td>~$19B</td>
+            <td>
+              <div class="fare-bar-wrap">
+                <div class="fare-bar-bg"><div class="fare-bar-fill" style="width:35%;background:#f59e0b;"></div></div>
+                <div class="fare-pct" style="color:#b45309;">~35%</div>
+              </div>
+            </td>
+            <td><span class="tag tag-yellow">Subsidy-dependent</span></td>
+            <td>Congestion pricing · Advertising · Real estate · Federal grants</td>
+            <td><strong style="color:#f59e0b;">75/100</strong></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🌴 LA Metro</div></td>
+            <td>~$7B</td>
+            <td>
+              <div class="fare-bar-wrap">
+                <div class="fare-bar-bg"><div class="fare-bar-fill" style="width:18%;background:#ef4444;"></div></div>
+                <div class="fare-pct" style="color:#dc2626;">~18%</div>
+              </div>
+            </td>
+            <td><span class="tag tag-yellow">Low recovery</span></td>
+            <td>Sales tax (Measure M/R) · Express Lanes tolls · TOD · Grants — fare recovery ~18% (verify against LA Metro audited financials)</td>
+            <td><strong style="color:#f59e0b;">65/100</strong></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🏛️ WMATA DC Metro</div></td>
+            <td>~$2.5B</td>
+            <td>
+              <div class="fare-bar-wrap">
+                <div class="fare-bar-bg"><div class="fare-bar-fill" style="width:25%;background:#ef4444;"></div></div>
+                <div class="fare-pct" style="color:#dc2626;">~25%</div>
+              </div>
+            </td>
+            <td><span class="tag tag-red">~60% jurisdictional + federal funding</span></td>
+            <td>DC/MD/VA compact funding · Federal grants · Joint development · Parking</td>
+            <td><strong style="color:#f59e0b;">60/100</strong></td>
+          </tr>
+          <tr style="background:#fef2f2;">
+                   <td><div class="sys-cell">🚌 <strong>NCDOT (NC Transit)</strong></div></td>
+                   <td>~$1.5–2.5B combined [TO BE VERIFIED — NCDOT UPTAS]</td>
+                   <td>
+                     <div class="fare-bar-wrap">
+                       <div class="fare-bar-bg"><div class="fare-bar-fill" style="width:25%;background:#ef4444;"></div></div>
+                       <div class="fare-pct" style="color:#dc2626;">~20–25% [TO BE VERIFIED]</div>
+                     </div>
+                   </td>
+                   <td><span class="tag tag-red">Fragmented across dozens of operators</span></td>
+                   <td>NCDOT PTD state grants · FTA 5307/5311 federal grants · NC Turnpike tolls · Minimal local parking — no statewide coordination</td>
+                   <td><strong style="color:#ef4444;">35/100</strong></td>
+                 </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- NCDOT REVENUE GAP CALLOUT -->
+  <div class="compare-callout" id="section-ncdot">
+    <h3>⚠️ North Carolina's Revenue Fragmentation — The Strategic Problem</h3>
+    <p>Every transit system in this benchmark receives government support — that is normal and expected for public transit. North Carolina's problem is not that its operators receive subsidies; it is that dozens of independent operators each run an identically thin non-fare revenue model with no statewide coordination, and government funding is fragmented across state appropriations and year-to-year federal formula grants. Three structural vulnerabilities define the current situation:</p>
+    <div class="cc-stat-row">
+      <div class="cc-stat">
+        <div class="cs-val">&lt;5%</div>
+        <div class="cs-lbl">Non-fare commercial revenue at any NC operator — the lowest of all 9 systems benchmarked</div>
+      </div>
+      <div class="cc-stat">
+        <div class="cs-val">$0</div>
+        <div class="cs-lbl">Statewide data licensing, unified loyalty program, or coordinated TOD program</div>
+      </div>
+      <div class="cc-stat">
+        <div class="cs-val">$0</div>
+        <div class="cs-lbl">Dedicated, legally protected funding mechanism (no NC equivalent of LA Measure M or WMATA 2018 dedicated legislation)</div>
+      </div>
+    </div>
+    <p>Every peer has at least one strategic non-fare or dedicated funding program that NC lacks at scale. London has congestion pricing and ULEZ. Tokyo (JR East) earns Suica payment processing fees at 500,000+ retail locations. Singapore has diversified retail concessions and property income. LA Metro has voter-approved dedicated sales tax (Measure M/R: ~$2B/yr). Seoul earns T-money transaction fees at 100,000+ stores. CATS in Charlotte has a local transit sales tax — the only NC analog — but it is limited to one city and not coordinated statewide.</p>
+    <p>The gap is not primarily operational — it is structural and governance-driven. North Carolina needs both a statewide dedicated funding mechanism (the Measure M equivalent) and a parallel non-fare diversification program coordinated through NCDOT PTD. The benchmarks below demonstrate the playbook. Sources: <a href="https://www.ncdot.gov/about-us/how-we-operate/finance-budget/Pages/default.aspx" style="color:#dc2626;">NCDOT PTD</a> · <a href="https://connect.ncdot.gov/business/Transit/FinanceDocuments/UPTAS%20update%2001312023.pdf" style="color:#dc2626;">NCDOT UPTAS</a> · <a href="https://www.ncdot.gov/about-us/how-we-operate/finance-budget/nc-first/Documents/cats-transit-funding-report.pdf" style="color:#dc2626;">CATS Transit Funding Report</a></p>
+  </div>
+
+  <!-- SYSTEM REVENUE PROFILES -->
+  <div class="section" id="section-profiles">
+    <div class="section-label"><div class="dot"></div>Revenue Model Deep Dive — All 9 Systems</div>
+    <div class="rev-cards-grid" id="revCardsGrid"></div>
+  </div>
+
+  <!-- NCDOT OPPORTUNITY SECTION -->
+  <div class="section" id="section-ncdot">
+    <div class="section-label"><div class="dot" style="background:#7c3aed;"></div>NCDOT &amp; NC Transit Revenue Opportunities — Lessons From Every Benchmarked Peer</div>
+    <div class="opp-grid">
+      <div class="opp-card">
+        <div class="oc-icon">💳</div>
+        <div class="oc-title">Statewide Contactless Payment Ecosystem</div>
+        <div class="oc-model">Modeled on: Tokyo Suica · Seoul T-money · GoTriangle GoPass/UMO pilot</div>
+        <div class="oc-desc">Deploy contactless EMV across all major NC operators (GoRaleigh, GoTriangle, CATS, GoDurham, GoCary, Greensboro Transit), coordinated through NCDOT PTD. Expand the GoTriangle GoPass/UMO platform statewide. Over time, establish a North Carolina Transit Card accepted at park-and-ride vending, station retail, and partner retailers — generating transaction processing fees on every non-fare purchase. Tokyo's Suica earns hundreds of millions annually from retail transaction fees alone. Sources: <a href="https://gotriangle.org/fares-and-passes/" style="color:#059669;">GoTriangle GoPass/UMO</a> · <a href="https://www.suica.jp/" style="color:#059669;">Tokyo Suica</a></div>
+        <span class="oc-potential">Potential: $10–20M/yr (conservative); $50M+ at full statewide maturity</span>
+      </div>
+      <div class="opp-card">
+        <div class="oc-icon">📊</div>
+        <div class="oc-title">NC Transit Open Data Portal + Data Licensing</div>
+        <div class="oc-model">Modeled on: Singapore LTA DataMall · TfL Open APIs</div>
+        <div class="oc-desc">NCDOT PTD establishes a unified, open API platform aggregating GTFS-RT from all NC state-funded operators. Licensing this aggregated, anonymized mobility data to urban planners, real estate developers, logistics companies, and NC universities creates a recurring revenue stream from an asset NC already generates. Requires one foundational investment: GTFS-RT standardization mandate and API platform buildout. Sources: <a href="https://datamall.lta.gov.sg" style="color:#059669;">Singapore DataMall</a> · <a href="https://www.transit.dot.gov/GTFS-realtime" style="color:#059669;">FTA GTFS-RT</a></div>
+        <span class="oc-potential">Potential: $3–10M/yr in data licensing fees (conservative)</span>
+      </div>
+      <div class="opp-card">
+        <div class="oc-icon">🅿️</div>
+        <div class="oc-title">Dynamic Parking + EV Charging Revenue</div>
+        <div class="oc-model">Modeled on: WMATA Joint Development · MTA Real Estate</div>
+        <div class="oc-desc">NC transit operators collectively operate major park-and-ride networks at CATS, GoTriangle (near RDU Airport), GoRaleigh, and other facilities. Implementing dynamic pricing (peak/off-peak rates), expanding EV charging with revenue-generating chargers, and developing transit-oriented commercial uses above surface lots would generate significant non-fare revenue from existing assets — coordinated statewide through NCDOT PTD.</div>
+        <span class="oc-potential">Potential: $15–30M/yr statewide from dynamic pricing + EV charging</span>
+      </div>
+      <div class="opp-card">
+        <div class="oc-icon">🎯</div>
+        <div class="oc-title">Statewide Rider Loyalty Program + Targeted Advertising</div>
+        <div class="oc-model">Modeled on: Tokyo JR East Lumine · Seoul Metro advertising</div>
+        <div class="oc-desc">A statewide loyalty program built on contactless fare data (once unified EMV is deployed) would give NCDOT PTD a first-party data asset to offer targeted advertising to retail and hospitality partners across NC. Riders earn points redeemable at station retail, partner restaurants, or transit upgrades across all participating operators. Advertisers pay premium rates for targeted access to NC's high-growth urban commuter demographic.</div>
+        <span class="oc-potential">Potential: $10–30M/yr in loyalty-driven advertising revenue at scale</span>
+      </div>
+      <div class="opp-card">
+        <div class="oc-icon">🏗️</div>
+        <div class="oc-title">Transit-Oriented Development (TOD) — Statewide</div>
+        <div class="oc-model">Modeled on: WMATA Joint Development · JR East Real Estate</div>
+        <div class="oc-desc">NC transit hubs represent significant underutilized real estate potential: Raleigh Union Station (GoRaleigh), Charlotte Center City Transit Station (CATS), Durham Station (GoDurham), and GoTriangle park-and-rides near RDU Airport. An NCDOT Joint Development Office — modeled on WMATA's 20+ project program — would coordinate joint development agreements generating upfront payments, ground lease income, and increased ridership. Sources: <a href="https://goraleigh.org/" style="color:#059669;">GoRaleigh</a> · <a href="https://www.catsride.org/" style="color:#059669;">CATS</a></div>
+        <span class="oc-potential">Potential: $30–80M/yr statewide in ground lease + development fees</span>
+      </div>
+      <div class="opp-card">
+        <div class="oc-icon">🚌</div>
+        <div class="oc-title">NC Statewide Transit Revenue Coordination Act</div>
+        <div class="oc-model">Modeled on: LA Metro Measure M · London Congestion Charge · WMATA 2018 Dedicated Funding</div>
+        <div class="oc-desc">North Carolina has no statewide equivalent of LA's dedicated sales tax, NYC's congestion pricing, or London's ULEZ charge. Advocating for a dedicated NC transit funding mechanism — a regional sales tax in major metros, VMT fee, or allocation of I-77/I-540 toll revenue to transit — would transform NC's financial resilience from year-to-year uncertainty to reliable long-term capital and operating funding. Sources: <a href="https://www.metro.net/about/funding/" style="color:#059669;">LA Measure M</a> · <a href="https://ncdot.gov/projects/i-77-south-express-lanes/Documents/i-77-south-rfq.pdf" style="color:#059669;">NC I-77 Express Lanes</a></div>
+        <span class="oc-potential">Potential: $200–500M+/yr if NC adopts dedicated funding model</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- PARTNERSHIP MODELS TABLE -->
+  <div class="section">
+    <div class="section-label"><div class="dot" style="background:#f59e0b;"></div>Key Revenue Partnerships — What NC Can Learn From Each Peer</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Peer System</th><th>Partnership Type</th><th>What NC Could Replicate</th><th>Estimated Value</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><div class="sys-cell">🇯🇵 Tokyo JR East</div></td>
+            <td>Suica accepted at 500,000+ retail locations; IT systems licensed globally</td>
+            <td>Deploy NC Transit contactless card (expanding GoTriangle GoPass/UMO statewide) at park-and-ride, station vending, and partner convenience stores across GoRaleigh, CATS, GoDurham; license transit management software to smaller NC operators</td>
+            <td><span class="tag tag-green">High ($20–50M+)</span></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🇸🇬 Singapore LTA</div></td>
+            <td>LTA DataMall licenses anonymized mobility data to 200+ organizations</td>
+            <td>Launch NCDOT NC Transit Open Data Portal — aggregate GTFS-RT from all NC operators; license OD flows, demand patterns, and dwell data to real estate developers, logistics firms, and NC university planners</td>
+            <td><span class="tag tag-yellow">Medium ($3–10M)</span></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🇬🇧 London TfL</div></td>
+            <td>Congestion Charge + ULEZ generates £480M+ annually; 10,000+ advertising panels</td>
+            <td>Advocate for NC I-77/I-540 congestion pricing with transit revenue allocation; expand digital advertising inventory across CATS, GoTriangle, and GoRaleigh stations and vehicles. Sources: <a href="https://ncdot.gov/projects/i-77-south-express-lanes/Documents/i-77-south-rfq.pdf" style="color:#374151;">I-77 Express Lanes</a></td>
+            <td><span class="tag tag-green">Very High ($100–300M+ if congestion pricing)</span></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🏛️ WMATA DC</div></td>
+            <td>Joint development program: 20+ TOD projects generating ground lease + upfront payments; SmarTrip regional interoperability across 15+ agencies</td>
+            <td>Establish NCDOT Joint Development Office; target Raleigh Union Station, Charlotte Center City Transit Station, Durham Station, and GoTriangle park-and-rides near RDU Airport for TOD partnerships. Replicate SmarTrip model for unified NC transit card.</td>
+            <td><span class="tag tag-green">High ($30–80M annually at scale)</span></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🌴 LA Metro</div></td>
+            <td>Measure M dedicated sales tax generates $860M/year; Express Lanes toll revenue growing; GoPass 20+ agency integration</td>
+            <td>Advocate for NC Statewide Transit Revenue Act (sales tax or VMT fee in major metros: Charlotte, Triangle, Greensboro); explore NC Turnpike I-77/I-540 toll integration with transit revenue allocation. Source: <a href="https://www.ncdot.gov/about-us/how-we-operate/finance-budget/nc-first/Documents/cats-transit-funding-report.pdf" style="color:#374151;">CATS Funding Report</a></td>
+            <td><span class="tag tag-green">Transformative ($200–500M+ if enacted)</span></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🇰🇷 Seoul Metro</div></td>
+            <td>Station pop-up retail events; cultural programming generates engagement + concession revenue; T-money retail ecosystem</td>
+            <td>Activate Charlotte Center City Transit Station, Raleigh Union Station, and Durham Station as destination retail and event venues; partner with NC cultural institutions for station programming; expand GoPass/UMO as a retail payment platform</td>
+            <td><span class="tag tag-yellow">Medium ($5–20M)</span></td>
+          </tr>
+          <tr>
+            <td><div class="sys-cell">🗽 MTA New York</div></td>
+            <td>OMNY contactless generates complete trip data; congestion pricing launched Jan 2025; naming rights pilots underway</td>
+            <td>Deploy unified contactless EMV across all NC operators (coordinated by NCDOT PTD); launch station naming rights for major NC transit stations; model I-77 congestion pricing advocacy on MTA's NYC congestion pricing pathway</td>
+            <td><span class="tag tag-yellow">Medium ($10–25M naming rights)</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- ROADMAP -->
+  <div class="section" id="section-roadmap">
+    <div class="section-label"><div class="dot" style="background:#dc2626;"></div>NC Transit Revenue Diversification Roadmap — NCDOT PTD Coordination Framework</div>
+    <div class="roadmap-row">
+      <div class="rm-card rm-near">
+        <div class="rm-phase">Near-Term — 0 to 18 Months</div>
+        <h4>Foundation &amp; Coordination</h4>
+        <ul>
+          <li>Mandate statewide GTFS-RT publication for all NCDOT-funded operators — foundational data infrastructure</li>
+          <li>Launch NCDOT NC Transit Open Data Portal (aggregate all operator feeds)</li>
+          <li>Establish statewide contactless payment standards committee (NCDOT PTD + all major operators)</li>
+          <li>Expand GoTriangle GoPass/UMO model to cover GoCary, GoDurham — Triangle consolidation first</li>
+          <li>Launch dynamic parking pricing at top 5–10 park-and-rides (CATS, GoTriangle near RDU, GoRaleigh)</li>
+          <li>Digitize and coordinate advertising inventory across CATS, GoTriangle, GoRaleigh stations</li>
+        </ul>
+      </div>
+      <div class="rm-card rm-mid">
+        <div class="rm-phase">Mid-Term — 18 to 36 Months</div>
+        <h4>Platform Development</h4>
+        <ul>
+          <li>Deploy unified contactless EMV across all major NC operators (coordinated by NCDOT PTD)</li>
+          <li>Launch NC Transit Rider Loyalty Program using statewide contactless fare data</li>
+          <li>Establish NCDOT Data Marketplace — begin licensing anonymized statewide mobility data</li>
+          <li>Create NCDOT Joint Development Office; sign first TOD agreements (targets: Raleigh Union Station, Charlotte Center City Transit Station, Durham Station)</li>
+          <li>Launch targeted advertising platform using NC statewide loyalty first-party data</li>
+          <li>Expand GoPass/UMO statewide — Charlotte (CATS), Greensboro Transit, GoRaleigh all on single platform</li>
+        </ul>
+      </div>
+      <div class="rm-card rm-long">
+        <div class="rm-phase">Long-Term — 36+ Months</div>
+        <h4>Structural Transformation</h4>
+        <ul>
+          <li>Advocate for NC Statewide Transit Revenue Coordination Act — regional sales tax (Charlotte, Triangle, Greensboro) or VMT fee, modeled on LA Measure M</li>
+          <li>Pursue I-77/I-540 toll revenue allocation to transit capital — congestion pricing pilot with transit benefit</li>
+          <li>Scale NC Transit Card to retail acceptance beyond transit (convenience stores, parking, vending) statewide</li>
+          <li>Develop 5+ TOD projects across NC generating recurring ground lease income</li>
+          <li>Pursue federal grants (FTA 5339, RAISE, Infrastructure Law) tied to NCDOT PTD technology standardization program</li>
+          <li>Target: reduce combined NC operator government dependency from ~75% toward 60–65% through coordinated non-fare revenue diversification</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <!-- BACK NAVIGATION -->
+  <div class="back-bar">
+    <a class="back-btn primary" href="one-pager-benchmarking-NCDOT.html">← Rankings Dashboard</a>
+    <a class="back-btn" href="profiles/ncdot.html">🚌 NCDOT Full Profile</a>
+    <a class="back-btn" href="profiles/tokyo-jr-east.html">🇯🇵 Tokyo Revenue Model</a>
+    <a class="back-btn" href="profiles/london-tfl.html">🇬🇧 London Revenue Model</a>
+    <a class="back-btn" href="profiles/singapore-lta.html">🇸🇬 Singapore Revenue Model</a>
+  </div>
+
+</div>
+
+<div class="footer">Made with IBM Bob · NCDOT Benchmarking Research 2024</div>
+
+<!-- SOURCES SECTION -->
+<div style="max-width:920px;margin:0 auto 40px;padding:0 20px;">
+  <div style="background:#fff;border-radius:14px;padding:24px 28px;box-shadow:0 2px 10px rgba(0,0,0,.06);border-top:4px solid #57606a;">
+    <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.12em;color:#57606a;margin-bottom:14px;padding-bottom:7px;border-bottom:1px solid #e5e7eb;">Sources &amp; Data Notes — All 9 Systems</div>
+    <p style="font-size:11px;color:#57606a;margin-bottom:4px;line-height:1.6;font-style:italic;background:#fef9c3;padding:7px 10px;border-radius:6px;border-left:3px solid #f59e0b;"><strong style="color:#374151;">Benchmark rating disclaimer:</strong> All revenue scores and fare recovery ratios are internal benchmark ratings produced for NCDOT benchmarking research purposes and are not independently validated industry ratings. NCDOT figures marked [TO BE VERIFIED] require confirmation from NCDOT UPTAS reports and individual operator financials before external citation. Peer system figures should be verified against each agency's most recent audited annual report before external citation.</p>
+    <p style="font-size:12px;color:#57606a;margin-top:10px;margin-bottom:10px;line-height:1.7;"><strong style="color:#1f2328;">Singapore LTA:</strong> Fare recovery (~55%) reflects operating cost coverage by passenger fares when full government capital commitment is counted — the government (via NRFF) owns all rail assets and (via BCM) absorbs all bus revenue risk, representing ~20% structural capital/ownership support. The 70% figure cited in some sources reflects operating-cost-only coverage under a model where government capital is already excluded. Non-fare revenue (~25%) includes retail concessions, advertising, tourist passes, and property income. LTA DataMall is primarily open/freemium data — direct licensing revenue is modest. Source: LTA Annual Report; Land Transport Masterplan 2040; NRFF/BCM public documentation.</p>
+    <p style="font-size:12px;color:#57606a;margin-bottom:10px;line-height:1.7;"><strong style="color:#1f2328;">SBB / Zürich:</strong> SBB passenger division fare recovery is approximately 38% of passenger segment operating costs. SBB receives substantial federal and cantonal government contributions (~32% of total system cost) under the Leistungsvereinbarung framework, covering infrastructure maintenance, network renewal, and subsidized regional passenger services. Total SBB revenue ~CHF 9–10B; additional revenue comes from freight (SBB Cargo), real estate (800+ commercial spaces), and international passes. Source: SBB Annual Report; Swiss Federal Council Leistungsvereinbarung 2021–2024.</p>
+    <p style="font-size:12px;color:#57606a;margin-bottom:10px;line-height:1.7;"><strong style="color:#1f2328;">London TfL:</strong> Non-fare revenue (~42%) — Congestion Charge (~£280M), ULEZ (~£200M), advertising, and property — exceeds fare revenue share, making TfL the most commercially diversified Western transit authority. All figures are approximate and vary year-on-year; verify against TfL Annual Report 2023/24. The £130M open data economic value estimate is per the 2017 Deloitte/TfL independent study and has not been updated since. Government grant (~23% of operating costs) covers the structural remaining gap. TfL contactless: buses from July 2012; Tube/rail from September 2014. Source: TfL Annual Report 2023/24; Deloitte/TfL 2017 open data study.</p>
+    <p style="font-size:12px;color:#57606a;margin-bottom:10px;line-height:1.7;"><strong style="color:#1f2328;">Tokyo JR East:</strong> JR East is a privatized listed company (fully privatized from JNR in 1987; government stake fully divested by 2002). It earns no operating subsidy; ~2% of total cost reflects minimal legacy infrastructure grants. Non-fare revenue (~40%) includes Suica payment processing fees (500K+ retail merchants), Lumine/NewDays/ecute station retail chains, Mets Hotels, real estate, and IT system licensing. Revenue figures are from COVID-era reporting — current revenue has recovered and may be higher. Suica 90M+ cards in circulation. Source: JR East Annual Report / Integrated Report; JR East IR materials.</p>
+    <p style="font-size:12px;color:#57606a;margin-bottom:10px;line-height:1.7;"><strong style="color:#1f2328;">Seoul Metro:</strong> Seoul Metro runs a structural operating deficit covered by the Seoul Metropolitan Government (~35% operating subsidy). Fares are kept low as a deliberate social policy, creating a persistent gap. Non-fare revenue (~15%) includes T-money payment ecosystem fees, station retail concessions, and digital advertising. T-money is accepted at 100,000+ retail locations city-wide, generating fee income independent of fare levels. Source: Seoul Metro Annual Report; Seoul Metropolitan Government budget documents.</p>
+    <p style="font-size:12px;color:#57606a;margin-bottom:10px;line-height:1.7;"><strong style="color:#1f2328;">MTA New York:</strong> MTA is ~45% dependent on NY State dedicated taxes (payroll mobility tax, petroleum business tax), NYC tax levy, and federal formula grants — all structural and recurring. OMNY fare cap is $34/week (not per day); weekly cap enables unlimited trips after reaching the threshold. NYC Congestion Pricing launched January 2025 in modified form; projected toll revenue ~$500–600M/yr supporting $1B+ in bonded capital capacity. Source: MTA FY2024 Budget; MTA Congestion Pricing Program documentation; MTA OMNY program materials.</p>
+    <p style="font-size:12px;color:#57606a;margin-bottom:10px;line-height:1.7;"><strong style="color:#1f2328;">WMATA (DC Metro):</strong> WMATA depends on ~60% government funding from DC/MD/VA jurisdictional contributions and federal grants. The 2018 dedicated funding legislation provides $500M+/yr in capital funding — a structural improvement over prior year-to-year uncertainty, but still subject to tri-jurisdictional political consensus annually. Joint Development program (20+ TOD projects) generates ground lease income. SmarTrip is interoperable across 15+ regional agencies. Source: WMATA FY2024 Budget; WMATA Compact; 2018 dedicated funding legislation documentation.</p>
+    <p style="font-size:12px;color:#57606a;margin-bottom:10px;line-height:1.7;"><strong style="color:#1f2328;">LA Metro:</strong> Fare recovery (~18%) is as cited in this benchmark; verify against LA Metro FY2023/24 audited financial statements before external use. The dedicated sales tax (Measure M, 2016 + Measure R, 2008) generates ~$2B/yr and is legally voter-locked, making it the most structurally stable US transit funding mechanism benchmarked. Express Lanes toll revenue is a growing supplemental stream. Source: LA Metro FY2024 Adopted Budget; Measure M/R ballot documentation.</p>
+    <p style="font-size:12px;color:#57606a;line-height:1.7;"><strong style="color:#1f2328;">NCDOT (NC Transit):</strong> Revenue breakdown for NC operators (combined estimate, all figures [TO BE VERIFIED via NCDOT UPTAS and individual operator reports]): Fare (~20–25%) + NCDOT PTD state grants/federal FTA formula grants (~70–75%) + Parking/Advertising/Other (~5%) = 100% of operating costs. No statewide coordination of non-fare commercial revenue exists. CATS (Charlotte) has a local transit sales tax (~$60M/yr estimate, [VERIFY]) — the only NC analog to a dedicated funding mechanism. GoTriangle's GoPass/UMO pilot generates modest technology fee income. Statewide data licensing potential is estimated at $3–10M/yr at conservative scale. Non-fare diversification reduces subsidy <em>dependence</em> — it does not directly change the fare recovery ratio. Source: NCDOT PTD (ncdot.gov); NCDOT UPTAS (connect.ncdot.gov); GoTriangle (gotriangle.org); CATS (catsride.org); GoRaleigh (goraleigh.org); FTA formula grant documentation.</p>
+  </div>
+</div>
+
+<script>
+const SYSTEMS = [
+  {
+    flag:'🇸🇬', name:'Singapore LTA', country:'Singapore', revenueScore:90,
+    profileFile:'profiles/singapore-lta.html',
+    topColor:'#ef4444',
+    totalBudget:'~$2.5B SGD (operating subsidies only; total LTA expenditure is significantly higher including capital)', fareRecovery:55, budgetColor:'#f59e0b',
+    ratioFare:55, ratioNonFare:25, ratioSubsidy:0, ratioCapital:20,
+    subsidyNote:'~20% structural govt support via NRFF (govt owns all rail assets) and BCM (govt bears bus revenue risk). Operating fare recovery ~55% when full capital transfers are accounted for.',
+    streams:[
+      {icon:'🎫', name:'Fare Revenue (EZ-Link / SimplyGo Contactless)', tag:'st-core'},
+      {icon:'🏪', name:'Station Retail Concessions (MRT interchanges)', tag:'st-core'},
+      {icon:'📢', name:'Advertising (130+ stations, 5,000+ buses)', tag:'st-core'},
+      {icon:'🏗️', name:'Property Development & Land Value Capture', tag:'st-grow'},
+      {icon:'🎫', name:'Tourist Day Passes & Premium EZ-Link', tag:'st-grow'},
+      {icon:'📡', name:'Mobility Data (LTA DataMall — open/freemium, modest revenue)', tag:'st-new'},
+      {icon:'🏛️', name:'Govt Capital Support: NRFF rail assets + BCM bus revenue risk', tag:'st-core'},
+    ],
+    insight:'Singapore is a non-fare diversification leader, but is not subsidy-free. When the full government commitment is counted — the NRFF means the government owns all trains, tracks, and stations; the BCM means the government bears all bus revenue risk — approximately 20% of total system cost is structural government capital support. The operating fare recovery of ~55% reflects this more honestly. The genuine innovation is the non-fare mix (retail, advertising, property: ~25%) which NC should study and scale via a statewide NCDOT open data portal. DataMall is primarily open/free data — direct revenue is modest and growing, not yet a major income line.'
+  },
+  {
+    flag:'🇨🇭', name:'Zürich SBB/ZVV', country:'Switzerland', revenueScore:85,
+    profileFile:'profiles/zurich-sbb.html',
+    topColor:'#dc2626',
+    totalBudget:'~CHF 9–10B total (passenger + freight + real estate + infrastructure)', fareRecovery:38, budgetColor:'#f59e0b',
+    ratioFare:38, ratioNonFare:30, ratioSubsidy:0, ratioCapital:32,
+    subsidyNote:'~32% federal/cantonal infrastructure subsidy: SBB receives substantial government contributions for network maintenance, regional passenger services (Leistungsvereinbarung), and infrastructure investment. Passenger division fare recovery is ~38% of the passenger segment operating cost.',
+    streams:[
+      {icon:'🎫', name:'Fare Revenue — SwissPass (passenger division)', tag:'st-core'},
+      {icon:'🚂', name:'SBB Cargo / Freight Operations', tag:'st-core'},
+      {icon:'🏢', name:'Real Estate (800+ station commercial spaces)', tag:'st-core'},
+      {icon:'🌍', name:'International Rail Pass Sales (Eurail, Swiss Travel Pass)', tag:'st-grow'},
+      {icon:'📢', name:'Station Advertising (Hauptbahnhof concourses)', tag:'st-core'},
+      {icon:'🔑', name:'SwissPass Technology Licensing (unverified at national scale)', tag:'st-new'},
+      {icon:'🏛️', name:'Federal/Cantonal Infrastructure Subsidies (Leistungsvereinbarung)', tag:'st-core'},
+    ],
+    insight:'SBB is financially resilient by transit standards — freight, real estate, and international passes (~30% combined) meaningfully diversify revenue. However, the passenger rail division receives substantial federal and cantonal subsidies for network maintenance and regional services (the Leistungsvereinbarung framework). When infrastructure support is counted, government contributions represent ~32% of total system cost. SBB is not profitable in the private-sector sense — it is a well-managed public enterprise with diversified income. The real estate and freight model is the right lesson for NC, not the misleading "self-sufficient" framing.'
+  },
+  {
+    flag:'🇬🇧', name:'London TfL', country:'United Kingdom', revenueScore:88,
+    profileFile:'profiles/london-tfl.html',
+    topColor:'#1d4ed8',
+    totalBudget:'~£10–12B total (operating + capital combined)', fareRecovery:35, budgetColor:'#f59e0b',
+    ratioFare:35, ratioNonFare:42, ratioSubsidy:23, ratioCapital:0,
+    subsidyNote:'~23% GLA/central government grant. TfL is unusual: its non-fare revenue (Congestion Charge, ULEZ, advertising, property) actually exceeds its fare revenue share, making it the most commercially innovative Western transit authority. Government grant covers the remaining structural gap.',
+    streams:[
+      {icon:'🎫', name:'Fares — Oyster, Contactless EMV, PAYG', tag:'st-core'},
+      {icon:'🚗', name:'Congestion Charge (~£280M/yr in benchmarked period)', tag:'st-core'},
+      {icon:'🌿', name:'Ultra Low Emission Zone — ULEZ (~£200M/yr, varies year-on-year)', tag:'st-core'},
+      {icon:'📢', name:'Advertising — 10,000+ panels across Tube & buses', tag:'st-core'},
+      {icon:'🏗️', name:'Property Development — air rights, station retail, depots', tag:'st-grow'},
+      {icon:'💻', name:'Open Data Value (~£130M economic value, per 2017 Deloitte study)', tag:'st-new'},
+      {icon:'🏛️', name:'GLA / Central Government Grant (~23% of operating costs)', tag:'st-core'},
+    ],
+    insight:'TfL is the benchmark for non-fare revenue innovation in the Western world: non-fare streams (Congestion Charge, ULEZ, advertising, property) contribute ~42% of total revenue — more than fares. The Congestion Charge and ULEZ alone are worth ~£480M annually in the benchmarked period. Government grant (~23%) covers the remaining structural gap, which TfL is actively working to eliminate. Revenue figures are time-sensitive; verify against the latest TfL Annual Report. The Congestion Charge + ULEZ model is directly applicable to NC\'s I-77/I-540 corridor congestion pricing advocacy and NCDOT transit revenue strategy.'
+  },
+  {
+    flag:'🇰🇷', name:'Seoul Metro', country:'South Korea', revenueScore:80,
+    profileFile:'profiles/seoul-metro.html',
+    topColor:'#0891b2',
+    totalBudget:'~$4B USD (Seoul Metro corporation; total Seoul public transit budget is higher)', fareRecovery:50, budgetColor:'#f59e0b',
+    ratioFare:50, ratioNonFare:15, ratioSubsidy:35, ratioCapital:0,
+    subsidyNote:'~35% Seoul Metropolitan Government operating subsidy. Seoul Metro runs structural operating deficits covered by the city government, driven by low fares set for social policy reasons and aging infrastructure maintenance costs.',
+    streams:[
+      {icon:'🎫', name:'Fare Revenue — T-money, contactless tap', tag:'st-core'},
+      {icon:'💳', name:'T-money Transaction Fees (retail, taxis, vending)', tag:'st-grow'},
+      {icon:'🏪', name:'Station Retail Concessions (major interchanges)', tag:'st-core'},
+      {icon:'📢', name:'Digital & Static Advertising (platforms, trains)', tag:'st-core'},
+      {icon:'🌐', name:'Smart City Data Partnerships (Seoul Metropolitan Gov)', tag:'st-new'},
+      {icon:'🎭', name:'Cultural Events & Pop-ups in Station Concourses', tag:'st-new'},
+      {icon:'🏛️', name:'Seoul Metropolitan Government Operating Subsidy (~35%)', tag:'st-core'},
+    ],
+    insight:'Seoul Metro runs an operating deficit covered by the Seoul Metropolitan Government — fares are kept low for social equity reasons, creating a structural subsidy need of ~35%. Within that context, Seoul\'s non-fare diversification (T-money fees, retail, advertising: ~15%) is solid but not transformative financially. The real innovation is the T-money payment ecosystem: earning fees at 100,000+ retail locations generates revenue independent of fare policy. This is the right model for NC to study — a transit card (expanding GoTriangle GoPass/UMO statewide) that earns money every time it\'s tapped anywhere.'
+  },
+  {
+    flag:'🇯🇵', name:'Tokyo JR East', country:'Japan', revenueScore:92,
+    profileFile:'profiles/tokyo-jr-east.html',
+    topColor:'#7c3aed',
+    totalBudget:'~¥1.5T (~$10B USD) in benchmarked period; verify against latest JR East IR', fareRecovery:58, budgetColor:'#22c55e',
+    ratioFare:58, ratioNonFare:40, ratioSubsidy:0, ratioCapital:2,
+    subsidyNote:'~2% minimal public infrastructure grants. JR East is a privatized listed company (JR East was fully privatized 2002); it earns no operating subsidy. Some legacy infrastructure from JNR privatization retains government-backed bonds. Closest to genuinely self-sufficient of all 9 systems.',
+    streams:[
+      {icon:'🎫', name:'Fare Revenue — Suica, reserved-seat, Shinkansen', tag:'st-core'},
+      {icon:'💳', name:'Suica Payment Processing (500K+ retail merchants)', tag:'st-core'},
+      {icon:'🏬', name:'Station Retail — Lumine, NewDays, ecute', tag:'st-core'},
+      {icon:'🏨', name:'Hotel & Resort Operations (Mets Hotels, Gransta)', tag:'st-core'},
+      {icon:'🏢', name:'Real Estate Development (station-adjacent)', tag:'st-core'},
+      {icon:'💻', name:'IT Systems — licensed to operators in UK, Taiwan, SE Asia', tag:'st-grow'},
+    ],
+    insight:'JR East is the only system in this benchmark that is close to genuinely self-sufficient — it\'s a privatized, listed company earning no operating subsidy. Non-rail revenue (Suica processing fees, station retail chains, hotels, real estate, IT licensing) accounts for ~40% of total revenue in the benchmarked period. Suica has 90M+ cards in circulation, reflecting extremely broad adoption beyond transit. Revenue figures reflect a COVID-era period — current revenue has recovered and may be higher. The lesson for NC is the Suica ecosystem model: scaling GoTriangle GoPass/UMO statewide to become a transit card that earns money on every purchase at convenience stores, restaurants, and vending machines.'
+  },
+  {
+    flag:'🗽', name:'MTA New York', country:'USA — New York', revenueScore:75,
+    profileFile:'profiles/mta-nyc.html',
+    topColor:'#f59e0b',
+    totalBudget:'~$19B (combined operating + capital across all MTA agencies)', fareRecovery:35, budgetColor:'#f59e0b',
+    ratioFare:35, ratioNonFare:20, ratioSubsidy:45, ratioCapital:0,
+    subsidyNote:'~45% state, city, and federal subsidy. MTA depends on NY State dedicated taxes (payroll mobility tax, petroleum business tax), NYC tax levy, and federal formula grants. Without these, MTA could not operate. Congestion pricing adds projected ~$500–600M toll revenue (supporting $1B+ in bonded capital capacity) as of Jan 2025 launch.',
+    streams:[
+      {icon:'🎫', name:'Fare Revenue — OMNY contactless, MetroCard (parallel)', tag:'st-core'},
+      {icon:'🏛️', name:'NY State Dedicated Taxes (payroll, petroleum)', tag:'st-core'},
+      {icon:'🏛️', name:'NYC Tax Levy & Federal Formula Grants', tag:'st-core'},
+      {icon:'🚗', name:'NYC Congestion Pricing (launched Jan 2025, ~$500–600M toll/yr projected)', tag:'st-new'},
+      {icon:'📢', name:'Out-of-Home Advertising (472 stations)', tag:'st-core'},
+      {icon:'🏢', name:'Real Estate & Penn Station Area Development', tag:'st-grow'},
+      {icon:'🏷️', name:'Station Naming Rights (piloting)', tag:'st-new'},
+    ],
+    insight:'MTA is 45% subsidy-dependent — state dedicated taxes and federal grants are structural and permanent, not temporary. Within the US context this is typical for a large transit agency. The real story is what MTA is adding on top: NYC congestion pricing (Jan 2025 launch) is projected at ~$500–600M annually in toll revenue, supporting $1B+ in bonded capital investment capacity — a transformative new stream. OMNY contactless tap data creates the infrastructure for future loyalty and personalization revenue. NCDOT should model the I-77/I-540 congestion pricing advocacy pathway on the MTA/NYC model immediately.'
+  },
+  {
+    flag:'🏛️', name:'WMATA (DC Metro)', country:'USA — Washington DC', revenueScore:60,
+    profileFile:'profiles/wmata-dc.html',
+    topColor:'#16a34a',
+    totalBudget:'~$2.5B operating budget (FY2024)', fareRecovery:25, budgetColor:'#ef4444',
+    ratioFare:25, ratioNonFare:15, ratioSubsidy:60, ratioCapital:0,
+    subsidyNote:'~60% DC/MD/VA jurisdictional funding + federal grants. WMATA\'s tri-jurisdictional compact is both a funding mechanism and a political constraint — all three jurisdictions must agree on budget levels each year. The 2018 dedicated funding legislation ($500M+/yr capital) was a structural improvement but WMATA remains heavily reliant on annual political consensus.',
+    streams:[
+      {icon:'🎫', name:'Fare Revenue — SmarTrip RFID (open-loop EMV not yet live)', tag:'st-core'},
+      {icon:'🏛️', name:'DC/MD/VA Jurisdictional Funding (~50% of operating costs)', tag:'st-core'},
+      {icon:'🏛️', name:'Federal Infrastructure Grants (incl. 2018 dedicated funding: $500M+/yr capital)', tag:'st-core'},
+      {icon:'🏗️', name:'Joint Development — TOD above Metro stations (20+ projects)', tag:'st-grow'},
+      {icon:'🅿️', name:'Parking Facility Revenue (system-wide lots)', tag:'st-core'},
+      {icon:'📢', name:'Station Advertising (digital + static)', tag:'st-core'},
+    ],
+    insight:'WMATA depends on ~60% government funding — split between DC/MD/VA jurisdictional contributions and federal grants. Within that context, WMATA\'s 15% non-fare commercial revenue (parking, advertising, joint development) is modest but growing. The Joint Development program is the most actionable TOD model for NC: 20+ projects generating ground lease income above Metro stations, with Navy Yard and NoMa as proven examples. SmarTrip\'s regional interoperability across 15+ agencies is NC\'s most directly replicable model — the equivalent of unifying GoRaleigh, GoTriangle, GoCary, GoDurham, CATS, and Greensboro Transit under a single card, starting with an expansion of the GoTriangle GoPass/UMO pilot. Government support for public transit is the structural norm across all 9 systems — the key variable is funding stability and statewide coordination.'
+  },
+  {
+    flag:'🌴', name:'LA Metro', country:'USA — Los Angeles', revenueScore:65,
+    profileFile:'profiles/la-metro.html',
+    topColor:'#ea580c',
+    totalBudget:'~$7B (operating + capital; verify total against LA Metro FY2024 Adopted Budget)', fareRecovery:18, budgetColor:'#ef4444',
+    ratioFare:18, ratioNonFare:22, ratioSubsidy:60, ratioCapital:0,
+    subsidyNote:'~60% sales tax (Measure M/R) + state/federal grants. Critically, the sales tax IS classified as dedicated non-fare revenue — LA Metro is unique in that its "subsidy" comes from a voter-approved dedicated tax, not discretionary budget allocations. This structural difference makes LA Metro\'s funding far more politically stable than NC operator funding — the lesson for NCDOT is clear.',
+    streams:[
+      {icon:'🎫', name:'Fare Revenue — TAP Card (~18%, verify against audited financials)', tag:'st-core'},
+      {icon:'📊', name:'Sales Tax — Measure M (2016) + Measure R (2008): ~$2B/yr combined', tag:'st-core'},
+      {icon:'🏛️', name:'Federal & State Grants (TIFIA, FTA formula, RAISE)', tag:'st-core'},
+      {icon:'🛣️', name:'Express Lanes Toll Revenue — I-10 and I-110 (growing)', tag:'st-grow'},
+      {icon:'🏗️', name:'Transit-Oriented Development (station-area partnerships)', tag:'st-grow'},
+      {icon:'🏷️', name:'Station Naming Rights (piloting, not yet material)', tag:'st-new'},
+    ],
+    insight:'LA Metro has the lowest fare recovery (18%) of any system in this benchmark, but its funding model is structurally the most stable of all US systems. The dedicated sales tax (Measure M + R: ~$2B/yr) and Express Lanes toll revenue are legally locked, voter-approved income streams that cannot be raided by the state legislature. This is the key insight for NC: the goal is not to maximize fare recovery but to secure dedicated, legally protected funding. The CATS Charlotte local transit sales tax is NC\'s closest analog — scaling this model statewide through a NC Transit Revenue Act is the most direct policy pathway. Fare recovery ~18% should be verified against LA Metro FY2023/24 audited financial statements before citing externally. Source: CATS Funding Report (NCDOT/NC FIRST).'
+  },
+  {
+    flag:'🚌', name:'NCDOT (NC Transit)', country:'USA — North Carolina', revenueScore:35,
+    profileFile:'profiles/ncdot.html',
+    topColor:'#3b6ea5',
+    totalBudget:'~$1.5–2.5B combined across all NC operators [TO BE VERIFIED — NCDOT UPTAS + individual operator reports]', fareRecovery:22, budgetColor:'#ef4444',
+    ratioFare:22, ratioNonFare:3, ratioSubsidy:75, ratioCapital:0,
+    subsidyNote:'~70–75% NCDOT PTD state grants + FTA federal formula grants, split across dozens of independent operators. No statewide revenue coordination exists. Each operator runs a nearly identical subsidy-heavy model with minimal non-fare revenue. CATS Charlotte has a local transit sales tax (~$60M/yr, [VERIFY]) — the only NC analog to a dedicated funding mechanism.',
+    streams:[
+      {icon:'🎫', name:'Fare Revenue — varies by operator; GoPass/UMO in Triangle (~20–25% avg, [TO BE VERIFIED])', tag:'st-core'},
+      {icon:'🏛️', name:'NCDOT PTD State Grants (General Fund allocation to transit)', tag:'st-core'},
+      {icon:'🏛️', name:'Federal Formula Grants — FTA Section 5307 (urban) + 5311 (rural)', tag:'st-core'},
+      {icon:'🏛️', name:'NC Turnpike Authority Toll Revenue (I-77, I-540) — not currently directed to transit', tag:'st-core'},
+      {icon:'💳', name:'GoTriangle GoPass/UMO — emerging regional payment platform (Triangle only)', tag:'st-grow'},
+      {icon:'🏛️', name:'CATS Charlotte Local Transit Sales Tax (~$60M/yr, [VERIFY]) — only local dedicated funding in NC', tag:'st-grow'},
+      {icon:'❌', name:'No Statewide Data Licensing or Unified Open API', tag:'st-miss'},
+      {icon:'❌', name:'No Statewide Loyalty or Retail Partnership Program', tag:'st-miss'},
+      {icon:'❌', name:'No Coordinated Transit-Oriented Development Program at Scale', tag:'st-miss'},
+    ],
+    insight:'NC\'s combined 70–75% government dependency is real, but so is every peer system\'s. The critical difference is not that NC operators receive government support — it is that NC has dozens of independently fragmented operators each with no strategic non-fare revenue programs of any scale, while every peer does. The GoTriangle GoPass/UMO pilot is the most important existing foundation — if scaled statewide, it becomes the equivalent of WMATA\'s SmarTrip or Seoul\'s T-money. The roadmap is clear: NCDOT needs a statewide dedicated funding mechanism (the Measure M equivalent, modeled on CATS\'s existing local sales tax) as the structural fix, with statewide non-fare coordination as the parallel track. Sources: ncdot.gov/PTD · connect.ncdot.gov/UPTAS · gotriangle.org/fares-and-passes · catsride.org'
+  }
+];
+
+function buildRevCards(){
+  const g = document.getElementById('revCardsGrid');
+  SYSTEMS.forEach(s=>{
+    const card = document.createElement('div');
+    card.className = 'rev-card';
+    const fareColor = s.fareRecovery >= 55 ? '#22c55e' : s.fareRecovery >= 35 ? '#f59e0b' : '#ef4444';
+    const ratioCapPct = s.ratioCapital || 0;
+    const streamsHTML = s.streams.map(st=>`
+      <div class="stream-row">
+        <div class="stream-icon">${st.icon}</div>
+        <div class="stream-name">${st.name}</div>
+        <span class="stream-tag ${st.tag}">${
+          st.tag==='st-core' ? 'Core' :
+          st.tag==='st-grow' ? 'Growing' :
+          st.tag==='st-new'  ? 'Emerging' : 'Missing'
+        }</span>
+      </div>
+    `).join('');
+    const subsidyHTML = s.subsidyNote ? `
+      <div style="margin-top:8px;padding:8px 10px;background:#fef9c3;border-radius:6px;border-left:3px solid #f59e0b;">
+        <span style="font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:#854d0e;">Govt Support Note</span>
+        <p style="font-size:11px;color:#374151;margin-top:3px;line-height:1.5;">${s.subsidyNote}</p>
+      </div>` : '';
+    card.innerHTML = `
+      <div class="rc-header" style="border-top:4px solid ${s.topColor}">
+        <div class="rc-header-top">
+          <div class="rc-flag">${s.flag}</div>
+          <div class="rc-title">
+            <h3>${s.name}</h3>
+            <div class="rc-sub">${s.country}</div>
+          </div>
+          <div class="rc-score">
+            <div class="rs-num" style="color:${s.revenueScore>=85?'#16a34a':s.revenueScore>=65?'#b45309':'#dc2626'}">${s.revenueScore}</div>
+            <div class="rs-lbl">Revenue Score</div>
+          </div>
+        </div>
+        <div style="font-size:10px;color:#57606a;margin-bottom:6px;font-style:italic;">${s.totalBudget}</div>
+        <div>
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
+            <span style="font-size:10px;color:#64748b;font-weight:700;">Revenue Mix (operating costs)</span>
+            <span style="font-size:10px;font-weight:700;color:${fareColor}">Fare Recovery: ${s.fareRecovery}%</span>
+          </div>
+          <div class="ratio-bar">
+            <div class="ratio-fare" style="width:${s.ratioFare}%"></div>
+            <div class="ratio-nonfar" style="width:${s.ratioNonFare}%"></div>
+            <div class="ratio-subsidy" style="width:${s.ratioSubsidy}%"></div>
+            ${ratioCapPct > 0 ? `<div style="width:${ratioCapPct}%;background:#fbbf24;flex-shrink:0;"></div>` : ''}
+          </div>
+          <div class="ratio-legend">
+            <div class="rl-item"><div class="rl-dot" style="background:#059669"></div>Fare (${s.ratioFare}%)</div>
+            <div class="rl-item"><div class="rl-dot" style="background:#34d399"></div>Non-Fare (${s.ratioNonFare}%)</div>
+            ${s.ratioSubsidy > 0 ? `<div class="rl-item"><div class="rl-dot" style="background:#cbd5e1"></div>Gov Subsidy (${s.ratioSubsidy}%)</div>` : ''}
+            ${ratioCapPct > 0 ? `<div class="rl-item"><div class="rl-dot" style="background:#fbbf24"></div>Gov Capital/Asset Support (${ratioCapPct}%)</div>` : ''}
+          </div>
+        </div>
+        ${subsidyHTML}
+      </div>
+      <div class="rc-streams">
+        <div class="rc-streams-label">Revenue Streams</div>
+        ${streamsHTML}
+      </div>
+      <div class="rc-insight">
+        <div class="ri-label">Key Insight for NC</div>
+        <p>${s.insight}</p>
+        <a href="${s.profileFile}" style="display:inline-block;margin-top:10px;font-size:11px;font-weight:700;color:#059669;text-decoration:none;">View full profile →</a>
+      </div>
+    `;
+    g.appendChild(card);
+  });
+}
+
+buildRevCards();
+</script>
+</body>
+</html>

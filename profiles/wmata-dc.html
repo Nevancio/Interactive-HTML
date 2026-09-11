@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>WMATA DC Metro — Transit Profile</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: #f0f4ff; color: #1f2328; font-size: 14px; line-height: 1.7; }
+  .page { max-width: 820px; margin: 0 auto; padding: 40px 24px 60px; }
+  .profile-header { background: linear-gradient(135deg, #166534 0%, #22c55e 100%); border-radius: 16px; padding: 32px 36px; color: #fff; margin-bottom: 32px; display: flex; align-items: center; gap: 24px; }
+  .profile-flag { font-size: 64px; }
+  .profile-header h1 { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+  .profile-header .sub { font-size: 13px; color: #bbf7d0; margin-bottom: 12px; }
+  .rank-badge { display: inline-block; background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.4); border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 700; }
+  .score-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 32px; }
+  .score-box { background: #fff; border-radius: 12px; padding: 14px 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,.06); border-top: 4px solid #22c55e; }
+  .score-box .sb-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 4px; }
+  .score-box .sb-val { font-size: 24px; font-weight: 800; }
+  .score-box .sb-max { font-size: 10px; color: #94a3b8; }
+  .score-box.overall { border-top-color: #f59e0b; background: #fffbeb; }
+  .score-box.overall .sb-val { color: #b45309; }
+  .section { background: #fff; border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+  .section-eyebrow { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #166534; margin-bottom: 6px; }
+  .section h2 { font-size: 17px; font-weight: 800; color: #1e293b; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; }
+  .section p { font-size: 13px; color: #374151; margin-bottom: 10px; }
+  .section p:last-child { margin-bottom: 0; }
+  .highlight-item { margin-bottom: 14px; padding-left: 14px; border-left: 3px solid #22c55e; }
+  .highlight-item .hi-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #166534; margin-bottom: 3px; }
+  .opp-list { list-style: none; padding: 0; }
+  .opp-list li { padding: 8px 12px 8px 36px; position: relative; font-size: 13px; color: #374151; border-bottom: 1px solid #f8fafc; }
+  .opp-list li:last-child { border-bottom: none; }
+  .opp-list li::before { content: '→'; position: absolute; left: 12px; color: #166534; font-weight: 700; }
+  .journey-row { display: flex; gap: 0; margin: 16px 0; }
+  .jp { flex: 1; text-align: center; position: relative; }
+  .jp::after { content: '▶'; position: absolute; right: -8px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #cbd5e1; }
+  .jp:last-child::after { display: none; }
+  .jp-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #64748b; margin-bottom: 5px; }
+  .jp-dot { width: 16px; height: 16px; border-radius: 50%; margin: 0 auto 5px; }
+  .jp-green { background: #22c55e; } .jp-yellow { background: #f59e0b; } .jp-red { background: #ef4444; }
+  .jp-note { font-size: 10px; color: #64748b; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+  .pill { background: #dcfce7; color: #166534; border-radius: 20px; font-size: 11px; font-weight: 700; padding: 3px 11px; }
+  .innovation-box { background: #f0fdf4; border: 1.5px solid #86efac; border-radius: 10px; padding: 16px 20px; margin-top: 10px; }
+  .warn-box { background: #fff7ed; border: 1.5px solid #fdba74; border-radius: 10px; padding: 16px 20px; margin-top: 10px; }
+  .innovation-box p, .warn-box p { font-size: 13px; color: #374151; }
+  .overall-section { background: linear-gradient(135deg, #166534, #22c55e); border-radius: 14px; padding: 28px; text-align: center; color: #fff; margin-bottom: 20px; }
+  .overall-section .os-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #bbf7d0; margin-bottom: 8px; }
+  .overall-section .os-num { font-size: 72px; font-weight: 900; line-height: 1; }
+  .overall-section .os-max { font-size: 18px; color: #86efac; }
+  .overall-section .os-verdict { font-size: 14px; color: #bbf7d0; margin-top: 10px; font-style: italic; }
+  .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+  .nav-btn { background: #1e293b; color: #fff; border: none; border-radius: 10px; padding: 10px 22px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-block; }
+  .nav-btn:hover { background: #334155; }
+  .nav-btn.home { background: #166534; }
+  .footer { margin-top: 40px; padding-top: 12px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #94a3b8; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="profile-header">
+    <div class="profile-flag">🏛️</div>
+    <div>
+      <h1>WMATA — DC Metro</h1>
+      <div class="sub">Washington Metropolitan Area Transit Authority · USA — Washington DC</div>
+      <span class="rank-badge">#7 Ranked Globally</span>
+    </div>
+  </div>
+  <div class="score-strip">
+    <div class="score-box"><div class="sb-label">Technology</div><div class="sb-val" style="color:#f59e0b">65</div><div class="sb-max">/100</div></div>
+    <div class="score-box"><div class="sb-label">User Experience</div><div class="sb-val" style="color:#f59e0b">63</div><div class="sb-max">/100</div></div>
+    <div class="score-box"><div class="sb-label">Silo Integration</div><div class="sb-val" style="color:#f59e0b">60</div><div class="sb-max">/100</div></div>
+    <div class="score-box"><div class="sb-label">Revenue Model</div><div class="sb-val" style="color:#f59e0b">60</div><div class="sb-max">/100</div></div>
+    <div class="score-box overall"><div class="sb-label">Overall</div><div class="sb-val">62</div><div class="sb-max">/100</div></div>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">World-Class Experience Characteristics</div>
+    <h2>Architecturally Iconic, Digitally Catching Up</h2>
+    <p>WMATA's Metro system is architecturally one of the most distinctive transit networks in the world — Harry Weese's brutalist coffered vault design makes every Metro station immediately recognizable and has earned the system landmark status. Yet the digital experience has not kept pace with this physical distinction. WMATA is a system that has significant structural assets — SmarTrip regional interoperability, a well-connected multi-agency network, and proximity to federal technology investment — but has been constrained by deferred capital investment, safety certification requirements, and the complexity of tri-jurisdictional governance.</p>
+    <p>The SmarTrip card's regional interoperability — accepted across DC, Maryland, and Virginia transit operators including DASH, ART, RideOn, and multiple Maryland systems — is a genuine achievement in the fragmented US transit landscape. This multi-agency acceptance model is directly relevant to North Carolina's challenge of integrating services across GoRaleigh, GoTriangle, GoCary, GoDurham, CATS, Greensboro Transit Agency, and the Piedmont/Carolinian intercity rail services. Source: <a href="https://connect.ncdot.gov/business/Transit/Pages/default.aspx" style="color:#166534;">NCDOT PTD operator list</a></p>
+    <div class="highlight-item">
+      <div class="hi-label">Technology Stack</div>
+      <p>SmarTrip RFID card with regional interoperability across 15+ transit operators. Real-time NextBus API and WMATA GTFS-RT feeds. Recent AWS cloud migration for operations data infrastructure. Rail control systems undergoing Safety Certification modernization. DC Metro app providing basic trip planning and real-time arrivals.</p>
+    </div>
+    <div class="highlight-item">
+      <div class="hi-label">User Experience</div>
+      <p>Real-time arrival information is available at all platform screens and via the app. The DC Metro app provides functional but basic trip planning. SmarTrip top-up and balance checking are available via NFC tap on Android devices. The station environment — despite iconic architecture — suffers from deferred maintenance that affects rider perception of the system's quality.</p>
+    </div>
+    <div class="highlight-item">
+      <div class="hi-label">Safety &amp; Reliability Context</div>
+      <p>WMATA's safety certification requirements following incidents have constrained service delivery and capital deployment. The SafeTrack accelerated maintenance program (2016–2017) and subsequent safety reforms have significantly improved reliability but at the cost of service frequency. Rebuilding rider trust in system reliability is WMATA's most pressing user experience challenge.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Opportunity Areas</div>
+    <h2>Where WMATA Must Improve</h2>
+    <ul class="opp-list">
+      <li>Modernize SmarTrip to support open-loop contactless EMV (bank card) acceptance — riders currently require a WMATA-specific card, creating onboarding friction for tourists and occasional users.</li>
+      <li>Unify Metro, DC Circulator, and Capital Bikeshare into a single app experience with integrated journey planning and payment.</li>
+      <li>Deploy real-time crowding data by rail car — this data is technically available but not yet surfaced to riders.</li>
+      <li>Build a post-journey personalization and loyalty layer using SmarTrip transaction data.</li>
+      <li>Improve the app UX substantially — the current DC Metro app lags significantly behind peer agency apps in design quality and feature completeness.</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Centricity on Customer Needs</div>
+    <h2>Functional Service, Unrealized Digital Potential</h2>
+    <p>WMATA serves a uniquely demanding ridership — government workers on predictable commute schedules, tourists visiting the nation's capital, and federal contractors who depend on reliable connections. The system's strengths — clean stations, real-time arrivals, regional interoperability — address the most basic rider needs adequately. However, the absence of personalization, the limited app experience, and the lack of a post-journey engagement layer leave significant value on the table.</p>
+    <p>The proximity of WMATA's headquarters and federal agencies to Silicon Valley-caliber technology partners creates an opportunity for technology partnership that few transit agencies can match. Federal data standards initiatives, smart city programs, and proximity to the Congressional Budget Office provide policy levers that NC agencies can also leverage through NCDOT PTD's relationship with FTA and federal transit programs.</p>
+    <div class="warn-box">
+      <p><strong>Key Gap:</strong> Real-time crowding data exists in WMATA's systems but is not published to riders or third-party developers. Publishing this single data stream — at no additional infrastructure cost — would immediately improve every major trip planning app used by DC Metro riders.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Commerce &amp; Revenue Generation</div>
+    <h2>Multi-Jurisdictional Funding With Growing Development Revenue</h2>
+    <p>WMATA's funding model reflects its unique tri-jurisdictional governance structure. Operating costs are shared among DC, Maryland, and Virginia — a model that provides a recurring funding structure, though one that remains vulnerable to political and budget pressure across all three jurisdictions. The 2018 dedicated funding legislation — passed by all three jurisdictions — was a watershed moment, providing WMATA with a more reliable capital funding stream. Verify current $500M+ annual figure against WMATA's latest capital budget.</p>
+    <div class="pill-row">
+      <span class="pill">Fare Revenue</span>
+      <span class="pill">DC/MD/VA Jurisdictional Funding</span>
+      <span class="pill">Federal Grants</span>
+      <span class="pill">Parking Facilities</span>
+      <span class="pill">Joint Development (Station Real Estate)</span>
+      <span class="pill">Advertising</span>
+    </div>
+    <p>WMATA's joint development program builds residential and commercial uses above Metro stations — a proven transit-oriented development model generating both upfront payments and long-term ground lease revenue. Station-adjacent development near Navy Yard, NoMa, and Tysons Corner has significantly increased property values and generated substantial tax base growth for jurisdictions — though WMATA itself captures only a portion of this value.</p>
+    <div class="innovation-box">
+      <p><strong>Key Stat:</strong> WMATA annual budget approximately $2.5 billion. Fare revenue covers approximately 25% of operating costs. Dedicated funding legislation (passed by all three jurisdictions in 2018) provides $500M+ annually in capital funding. Joint development program has 20+ projects in pipeline. Source: WMATA FY2024 Adopted Budget.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Data Silo Connectivity — Pre · During · Post Transit</div>
+    <h2>Partial Connectivity Across All Three Phases</h2>
+    <div class="journey-row">
+      <div class="jp"><div class="jp-label">Pre-Transit</div><div class="jp-dot jp-yellow"></div><div class="jp-note">⚠️ Partial</div></div>
+      <div class="jp"><div class="jp-label">During Transit</div><div class="jp-dot jp-yellow"></div><div class="jp-note">⚠️ Partial</div></div>
+      <div class="jp"><div class="jp-label">Post-Transit</div><div class="jp-dot jp-red"></div><div class="jp-note">❌ Fragmented</div></div>
+    </div>
+    <p><strong>Pre-Transit:</strong> SmarTrip purchase and loading works; basic trip planning available. Multi-agency journey planning (Metro + bus + bikeshare) requires app-switching.</p>
+    <p><strong>During Transit:</strong> Real-time arrivals available at all platforms. Crowding data technically available but not published. Push alerts inconsistent.</p>
+    <p><strong>Post-Transit:</strong> No post-journey experience, loyalty program, personalization, or AI-driven recommendations exist.</p>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Notable Innovation</div>
+    <h2>SmarTrip Regional Interoperability — A Model for a Unified North Carolina Transit Card</h2>
+    <div class="innovation-box">
+      <p>SmarTrip's acceptance across 15+ transit agencies in the DC metro area — DC Metro, DC Circulator, ART (Arlington), DASH (Alexandria), RideOn (Montgomery County), TheBus (Prince George's County), and several Maryland systems — is the closest US analog to Switzerland's SwissPass model. This voluntary multi-agency acceptance, achieved through a regional compact rather than federal mandate, directly demonstrates the feasibility of what North Carolina needs: a single card or digital credential accepted across GoRaleigh, GoTriangle, GoCary, GoDurham, CATS, Greensboro Transit Agency, and intercity Piedmont/Carolinian rail services. The GoTriangle GoPass/UMO pilot in the Triangle already demonstrates partial regional integration is achievable in NC — WMATA's SmarTrip shows what that looks like at full regional scale. WMATA's tri-jurisdictional compact is also analogous to NC's multi-jurisdiction transit landscape, though NC's coordination runs through a state DOT (NCDOT PTD) rather than a multi-state compact. Source: <a href="https://www.ncdot.gov/about-us/how-we-operate/finance-budget/Pages/default.aspx" style="color:#166534;">NCDOT PTD</a> · <a href="https://gotriangle.org/fares-and-passes/" style="color:#166534;">GoTriangle GoPass/UMO</a></p>
+    </div>
+  </div>
+  <div class="overall-section">
+    <div class="os-label">Overall Benchmarking Score</div>
+    <div class="os-num">62<span class="os-max">/100</span></div>
+    <div class="os-verdict">"SmarTrip's regional interoperability is a model worth studying — but the digital experience needs significant investment to match the iconic physical infrastructure."</div>
+  </div>
+  <div class="nav-row">
+    <span style="font-size:12px;color:#94a3b8;">7 of 9 · WMATA DC Metro</span>
+    <div style="display:flex;gap:10px;">
+      <a class="nav-btn" href="mta-nyc.html">← MTA New York</a>
+      <a class="nav-btn home" href="../one-pager-benchmarking-NCDOT.html">Rankings</a>
+      <a class="nav-btn" href="../revenue-deep-dive.html" style="background:#059669;">Revenue Deep Dive</a>
+      <a class="nav-btn" href="la-metro.html">Next: LA Metro →</a>
+    </div>
+  </div>
+  <div class="footer">Made with IBM Bob · NCDOT Benchmarking Research 2024</div>
+</div>
+</body>
+</html>

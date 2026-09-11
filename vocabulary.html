@@ -1,0 +1,567 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Glossary — NCDOT Benchmarking Research</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: #f0f4ff; color: #1f2328; font-size: 14px; line-height: 1.7; }
+
+  .hero {
+    background: linear-gradient(135deg, #3b0764 0%, #6d28d9 50%, #7c3aed 100%);
+    color: #fff; padding: 48px 24px 36px; text-align: center;
+  }
+  .hero .eyebrow { font-size: 10px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: #ddd6fe; margin-bottom: 10px; }
+  .hero h1 { font-size: 28px; font-weight: 800; margin-bottom: 10px; }
+  .hero h1 span { color: #c4b5fd; }
+  .hero p { font-size: 13px; color: #ddd6fe; max-width: 620px; margin: 0 auto 24px; }
+  .hero-nav { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; max-width: 860px; margin: 0 auto; }
+  .hn-chip {
+    background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.25);
+    border-radius: 20px; padding: 6px 14px; font-size: 11px; font-weight: 700;
+    color: #fff; text-decoration: none; display: inline-block;
+  }
+  .hn-chip:hover { background: rgba(255,255,255,.28); }
+
+  .main { max-width: 820px; margin: 0 auto; padding: 36px 20px 60px; }
+
+  .back-bar { display: flex; gap: 10px; margin-bottom: 28px; flex-wrap: wrap; }
+  .back-btn {
+    display: inline-block; background: #fff; border: 1.5px solid #e2e8f0;
+    border-radius: 10px; padding: 8px 16px; font-size: 12px; font-weight: 700;
+    text-decoration: none; color: #374151;
+  }
+  .back-btn:hover { border-color: #7c3aed; color: #7c3aed; }
+  .back-btn.primary { background: #7c3aed; color: #fff; border-color: #7c3aed; }
+  .back-btn.primary:hover { background: #6d28d9; }
+
+  .section-label {
+    font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+    color: #57606a; margin-bottom: 16px; padding-bottom: 7px;
+    border-bottom: 2px solid #7c3aed; display: flex; align-items: center; gap: 8px;
+  }
+  .section-label .dot { width: 8px; height: 8px; border-radius: 50%; background: #7c3aed; }
+
+  /* Category pills */
+  .cat-filter { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 28px; }
+  .cat-pill {
+    background: #fff; border: 1.5px solid #e2e8f0; border-radius: 20px;
+    padding: 5px 14px; font-size: 11px; font-weight: 700; cursor: pointer;
+    color: #374151;
+  }
+  .cat-pill:hover  { border-color: #7c3aed; color: #7c3aed; }
+  .cat-pill.active { background: #7c3aed; border-color: #7c3aed; color: #fff; }
+
+  /* Term cards */
+  .term-grid { display: flex; flex-direction: column; gap: 0; }
+  .term-card {
+    background: #fff; border-radius: 0;
+    padding: 20px 24px; border-bottom: 1px solid #f1f5f9;
+    border-left: 4px solid transparent;
+  }
+  .term-card:first-child { border-radius: 14px 14px 0 0; }
+  .term-card:last-child  { border-radius: 0 0 14px 14px; border-bottom: none; }
+  .term-grid-wrap { background: #fff; border-radius: 14px; box-shadow: 0 4px 24px rgba(0,0,0,.08); overflow: hidden; margin-bottom: 40px; }
+
+  .term-card.cat-finance   { border-left-color: #16a34a; }
+  .term-card.cat-tech      { border-left-color: #3b82f6; }
+  .term-card.cat-ux        { border-left-color: #f59e0b; }
+  .term-card.cat-payment   { border-left-color: #7c3aed; }
+  .term-card.cat-data      { border-left-color: #06b6d4; }
+  .term-card.cat-governance{ border-left-color: #ef4444; }
+  .term-card.cat-scale     { border-left-color: #0ea5e9; }
+
+  .term-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 6px; flex-wrap: wrap; }
+  .term-num { font-size: 11px; font-weight: 800; color: #94a3b8; min-width: 24px; }
+  .term-name { font-size: 16px; font-weight: 800; color: #1e293b; }
+  .term-tag {
+    display: inline-block; font-size: 10px; font-weight: 700; border-radius: 20px;
+    padding: 2px 9px; white-space: nowrap;
+  }
+  .tag-finance    { background: #dcfce7; color: #166534; }
+  .tag-tech       { background: #dbeafe; color: #1e40af; }
+  .tag-ux         { background: #fef9c3; color: #854d0e; }
+  .tag-payment    { background: #f3e8ff; color: #6b21a8; }
+  .tag-data       { background: #cffafe; color: #155e75; }
+  .tag-governance { background: #fee2e2; color: #991b1b; }
+  .tag-scale      { background: #e0f2fe; color: #075985; }
+
+  /* Score scale table */
+  .scale-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 12px; }
+  .scale-table th { background: #f8fafc; color: #374151; font-weight: 700; padding: 7px 10px; border-bottom: 2px solid #e5e7eb; text-align: left; }
+  .scale-table td { padding: 7px 10px; border-bottom: 1px solid #f1f5f9; color: #374151; vertical-align: top; line-height: 1.55; }
+  .scale-table tr:last-child td { border-bottom: none; }
+  .scale-table .score-100 { font-weight: 800; color: #16a34a; }
+  .scale-table .score-0   { font-weight: 800; color: #dc2626; }
+  .scale-table .dim-name  { font-weight: 700; color: #1e293b; white-space: nowrap; }
+
+  .term-def { font-size: 13px; color: #374151; line-height: 1.7; margin-bottom: 6px; }
+  .term-context { font-size: 12px; color: #57606a; font-style: italic; line-height: 1.6; }
+  .term-examples { margin-top: 8px; display: flex; flex-wrap: wrap; gap: 5px; }
+  .ex-pill { background: #f1f5f9; color: #374151; border-radius: 20px; font-size: 10px; font-weight: 700; padding: 2px 9px; }
+
+  /* Sources */
+  .sources-box {
+    background: #fff; border-radius: 14px; padding: 24px 28px;
+    box-shadow: 0 2px 10px rgba(0,0,0,.06); border-top: 4px solid #57606a;
+    margin-bottom: 40px;
+  }
+  .sources-box .sb-label { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #57606a; margin-bottom: 12px; padding-bottom: 7px; border-bottom: 1px solid #e5e7eb; }
+  .sources-box p { font-size: 12px; color: #57606a; margin-bottom: 8px; line-height: 1.7; }
+  .sources-box p:last-child { margin-bottom: 0; }
+
+  .footer { margin-top: 48px; padding-top: 14px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #94a3b8; }
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="eyebrow">IBM Benchmarking Research · 2024</div>
+  <h1>Benchmarking <span>Glossary</span></h1>
+  <p>Key terms and definitions used consistently across the NCDOT Global Transit Benchmarking Research. Understanding these concepts is essential for interpreting scores, comparisons, and recommendations in the context of North Carolina's statewide transit landscape.</p>
+  <div class="hero-nav">
+    <a class="hn-chip" href="one-pager-benchmarking-NCDOT.html">← Rankings Dashboard</a>
+    <a class="hn-chip" href="revenue-deep-dive.html">💰 Revenue Deep Dive</a>
+    <a class="hn-chip" href="#cat-finance">Finance Terms</a>
+    <a class="hn-chip" href="#cat-tech">Technology</a>
+    <a class="hn-chip" href="#cat-payment">Payment Systems</a>
+    <a class="hn-chip" href="#cat-ux">Customer Experience</a>
+    <a class="hn-chip" href="#cat-data">Data &amp; APIs</a>
+    <a class="hn-chip" href="#cat-governance">Governance</a>
+    <a class="hn-chip" href="#cat-scale">Ranking Scales</a>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="back-bar" style="margin-top:8px;">
+    <a class="back-btn primary" href="one-pager-benchmarking-NCDOT.html">← Rankings Dashboard</a>
+    <a class="back-btn" href="revenue-deep-dive.html">💰 Revenue Deep Dive</a>
+    <a class="back-btn" href="profiles/singapore-lta.html">🇸🇬 Singapore</a>
+    <a class="back-btn" href="profiles/zurich-sbb.html">🇨🇭 Zürich</a>
+    <a class="back-btn" href="profiles/london-tfl.html">🇬🇧 London</a>
+    <a class="back-btn" href="profiles/ncdot.html">🚌 NCDOT</a>
+  </div>
+
+  <!-- FINANCE TERMS -->
+  <div id="cat-finance" style="scroll-margin-top:20px;">
+    <div class="section-label"><div class="dot"></div>Finance &amp; Revenue Terms</div>
+    <div class="term-grid-wrap">
+      <div class="term-grid">
+
+        <div class="term-card cat-finance">
+          <div class="term-header">
+            <span class="term-num">01</span>
+            <span class="term-name">Fare Recovery Ratio</span>
+            <span class="term-tag tag-finance">Finance</span>
+          </div>
+          <p class="term-def">The percentage of a transit agency's total operating costs that are covered by passenger fare revenue. A fare recovery ratio of 60% means fares pay for 60 cents of every dollar spent on operations, with the remaining 40% funded by subsidies, grants, or non-fare revenue.</p>
+          <p class="term-context">Why it matters: Several systems in this benchmark are compared on fare recovery, and some readers may confuse this with total cost recovery (which includes subsidies and non-fare revenue). A high fare recovery ratio does not mean a system is independent of government support — capital costs may be publicly funded separately (see: Singapore NRFF, SBB infrastructure subsidies).</p>
+          <div class="term-examples"><span class="ex-pill">Singapore ~55% (operating-cost basis; ~20% govt capital excluded)</span><span class="ex-pill">Tokyo ~58%</span><span class="ex-pill">MTA ~35%</span><span class="ex-pill">NCDOT (NC avg) ~20–25% [TO BE VERIFIED via UPTAS]</span></div>
+        </div>
+
+        <div class="term-card cat-finance">
+          <div class="term-header">
+            <span class="term-num">02</span>
+            <span class="term-name">Non-Fare Revenue</span>
+            <span class="term-tag tag-finance">Finance</span>
+          </div>
+          <p class="term-def">Revenue not directly collected from passenger fares. Includes advertising, retail concessions, toll revenue, data licensing, property development, payment processing fees, parking, naming rights, and international rail pass sales.</p>
+          <p class="term-context">The strategic importance of non-fare revenue is a central theme of this benchmark. Systems with high non-fare revenue are less vulnerable to ridership fluctuations and political pressure on fare levels.</p>
+          <div class="term-examples"><span class="ex-pill">TfL: Congestion Charge, ULEZ</span><span class="ex-pill">JR East: Suica fees, retail</span><span class="ex-pill">SBB: Freight, real estate</span></div>
+        </div>
+
+        <div class="term-card cat-finance">
+          <div class="term-header">
+            <span class="term-num">03</span>
+            <span class="term-name">Subsidy / Government Support</span>
+            <span class="term-tag tag-finance">Finance</span>
+          </div>
+          <p class="term-def">Public funding provided through state, local, regional, or federal sources to support capital or operating costs of a transit agency. Two types are distinct: operating subsidy (covers day-to-day operations) and capital support (funds infrastructure, vehicles, and major projects).</p>
+          <p class="term-context">Precision matters here: Singapore LTA is often cited at ~70% fare recovery, but this figure covers only operating costs under a model where the government already owns all rail assets (NRFF) and absorbs all bus revenue risk (BCM). When full government capital support is counted, operating fare recovery is closer to ~55%. This distinction is important: a high operating fare recovery does not mean a system is independent of government support.</p>
+          <div class="term-examples"><span class="ex-pill">NCDOT/NC operators: ~70–75% of ops from state/federal subsidy [TO BE VERIFIED]</span><span class="ex-pill">Singapore NRFF: govt owns rail assets</span><span class="ex-pill">SBB: federal infrastructure grants</span></div>
+        </div>
+
+        <div class="term-card cat-finance">
+          <div class="term-header">
+            <span class="term-num">04</span>
+            <span class="term-name">Revenue Diversification</span>
+            <span class="term-tag tag-finance">Finance</span>
+          </div>
+          <p class="term-def">The extent to which a transit agency relies on multiple income streams rather than fares and direct government subsidy alone. A diversified revenue base reduces financial risk and supports investment in service quality independent of political budget cycles.</p>
+          <p class="term-context">NCDOT and NC transit operators score lowest in this benchmark on revenue diversification — they have virtually none of the coordinated non-fare revenue streams that sustain peer systems. Revenue diversification, coordinated through NCDOT PTD, is identified as the highest-priority strategic opportunity for North Carolina.</p>
+        </div>
+
+        <div class="term-card cat-finance">
+          <div class="term-header">
+            <span class="term-num">05</span>
+            <span class="term-name">Payment Processing Fees</span>
+            <span class="term-tag tag-finance">Finance</span>
+          </div>
+          <p class="term-def">Revenue earned when a transit-linked payment instrument is used for non-transit purchases and the operator or ecosystem captures a small fee per transaction. Aggregated across millions of daily purchases, these fees generate significant revenue independent of ridership.</p>
+          <p class="term-context">Tokyo's Suica card earns processing fees on every retail purchase at 500,000+ acceptance points. Seoul Metro earns T-money processing fees at 100,000+ retail locations. GoTriangle's GoPass/UMO pilot in the Triangle is NC's seed of this model — scaling this statewide across all NCDOT-supported operators is the direct NC application.</p>
+          <div class="term-examples"><span class="ex-pill">Suica (Tokyo)</span><span class="ex-pill">T-money (Seoul)</span><span class="ex-pill">EZ-Link (Singapore)</span></div>
+        </div>
+
+        <div class="term-card cat-finance">
+          <div class="term-header">
+            <span class="term-num">06</span>
+            <span class="term-name">Joint Development / Transit-Oriented Development (TOD)</span>
+            <span class="term-tag tag-finance">Finance</span>
+          </div>
+          <p class="term-def">Real estate development on, above, or adjacent to transit property that generates revenue through leases, land sales, air rights, or increased ridership from new transit-adjacent residents and workers. TOD also increases surrounding property tax revenue for local governments, though transit agencies may capture only a portion of this value directly.</p>
+          <div class="term-examples"><span class="ex-pill">WMATA: 20+ TOD projects</span><span class="ex-pill">JR East: Lumine retail above stations</span><span class="ex-pill">SBB: 800+ station commercial spaces</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- PAYMENT SYSTEMS -->
+  <div id="cat-payment" style="scroll-margin-top:20px;">
+    <div class="section-label"><div class="dot" style="background:#7c3aed;"></div>Payment System Terms</div>
+    <div class="term-grid-wrap">
+      <div class="term-grid">
+
+        <div class="term-card cat-payment">
+          <div class="term-header">
+            <span class="term-num">07</span>
+            <span class="term-name">Open-Loop Contactless Payment</span>
+            <span class="term-tag tag-payment">Payment</span>
+          </div>
+          <p class="term-def">Payment using a standard bank card or mobile wallet (Visa, Mastercard, Apple Pay, Google Pay) directly at the fare gate or validator, without requiring a transit-issued proprietary card. No registration, no pre-loading, no local card needed.</p>
+          <p class="term-context">TfL pioneered open-loop contactless on London buses in December 2012, extending to the full network in September 2014. MTA's OMNY program is the largest open-loop transit rollout in US history. North Carolina has no statewide contactless standard — GoTriangle's GoPass/UMO pilot is the most advanced NC deployment, with statewide coordination through NCDOT PTD as the recommended next step.</p>
+          <div class="term-examples"><span class="ex-pill">London OMNY</span><span class="ex-pill">MTA OMNY</span><span class="ex-pill">Singapore SimplyGo</span></div>
+        </div>
+
+        <div class="term-card cat-payment">
+          <div class="term-header">
+            <span class="term-num">08</span>
+            <span class="term-name">Closed-Loop Payment</span>
+            <span class="term-tag tag-payment">Payment</span>
+          </div>
+          <p class="term-def">Payment using a transit-issued proprietary card or digital wallet that is pre-loaded with value and only accepted within the transit ecosystem and designated partner merchants. Requires onboarding by the rider before first use.</p>
+          <p class="term-context">Closed-loop systems can evolve into powerful payment platforms if retail acceptance is expanded (e.g., Suica, T-money, EZ-Link). The friction of obtaining a closed-loop card creates onboarding barriers for tourists and infrequent users.</p>
+          <div class="term-examples"><span class="ex-pill">SmarTrip (WMATA)</span><span class="ex-pill">TAP (LA Metro)</span><span class="ex-pill">EZ-Link (Singapore)</span><span class="ex-pill">T-money (Seoul)</span><span class="ex-pill">Suica (Tokyo)</span></div>
+        </div>
+
+        <div class="term-card cat-payment">
+          <div class="term-header">
+            <span class="term-num">09</span>
+            <span class="term-name">EMV</span>
+            <span class="term-tag tag-payment">Payment</span>
+          </div>
+          <p class="term-def">Europay, Mastercard, Visa — the global technical standard for chip-enabled bank cards and secure contactless transactions. Commonly used as shorthand for bank-card tap payment in transit. EMV contactless allows riders to tap standard bank cards at fare validators.</p>
+          <div class="term-examples"><span class="ex-pill">Used by TfL, MTA OMNY, Singapore SimplyGo</span></div>
+        </div>
+
+        <div class="term-card cat-payment">
+          <div class="term-header">
+            <span class="term-num">10</span>
+            <span class="term-name">Fare Capping</span>
+            <span class="term-tag tag-payment">Payment</span>
+          </div>
+          <p class="term-def">A feature of contactless payment systems that automatically limits the total amount a rider pays within a defined period (daily or weekly), regardless of the number of trips taken. Once the cap is reached, additional trips within the period are free. Prevents riders from overpaying versus a period pass.</p>
+          <p class="term-context">MTA's OMNY includes a weekly fare cap equivalent to the 7-day unlimited MetroCard ($34 as of the benchmarked period). Daily and weekly caps should be stated separately — a common error is listing both as the same figure.</p>
+          <div class="term-examples"><span class="ex-pill">MTA OMNY weekly cap: $34</span><span class="ex-pill">TfL daily and weekly caps on Oyster/contactless</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- TECHNOLOGY TERMS -->
+  <div id="cat-tech" style="scroll-margin-top:20px;">
+    <div class="section-label"><div class="dot" style="background:#3b82f6;"></div>Technology Terms</div>
+    <div class="term-grid-wrap">
+      <div class="term-grid">
+
+        <div class="term-card cat-tech">
+          <div class="term-header">
+            <span class="term-num">11</span>
+            <span class="term-name">GTFS-RT</span>
+            <span class="term-tag tag-tech">Technology</span>
+          </div>
+          <p class="term-def">General Transit Feed Specification – Realtime. A standard format for publishing live transit information, including vehicle positions, arrival predictions, and service alerts. GTFS-RT is the foundation for real-time transit data in third-party apps like Google Maps, Transit App, and Citymapper.</p>
+          <p class="term-context">North Carolina lacks a statewide GTFS-RT aggregation portal. Individual NC operators have varying levels of real-time data publication, but no unified open API exists. Every top-5 system in this benchmark publishes comprehensive GTFS-RT. A statewide NCDOT open data mandate for all state-funded operators is identified as the highest-priority near-term technology action.</p>
+          <div class="term-examples"><span class="ex-pill">Used by MTA, TfL, Singapore LTA, Seoul Metro</span><span class="ex-pill">Statewide coordination absent: NCDOT</span></div>
+        </div>
+
+        <div class="term-card cat-tech">
+          <div class="term-header">
+            <span class="term-num">12</span>
+            <span class="term-name">API / Open Data</span>
+            <span class="term-tag tag-tech">Technology</span>
+          </div>
+          <p class="term-def">An Application Programming Interface (API) is a protocol that allows third-party developers and systems to access transit data. "Open data" means the agency makes such information broadly available — rather than restricting it to internal tools — enabling a developer ecosystem to build rider-facing applications at no cost to the agency.</p>
+          <p class="term-context">TfL's 2010 open data decision catalyzed 700+ third-party apps and generated an estimated £130M in annual economic value for London (2017 Deloitte study). Singapore's LTA DataMall is among the first comprehensive multimodal open transit data platforms globally.</p>
+        </div>
+
+        <div class="term-card cat-tech">
+          <div class="term-header">
+            <span class="term-num">13</span>
+            <span class="term-name">Data Licensing</span>
+            <span class="term-tag tag-data">Data</span>
+          </div>
+          <p class="term-def">The monetization of anonymized or aggregated mobility data through paid access, commercial licensing, or structured data products. Customers include urban planners, real estate developers, logistics companies, retailers, and researchers seeking insights from large-scale movement data.</p>
+          <p class="term-context">Singapore LTA's DataMall is an example of an open data platform that has evolved toward commercial licensing. North Carolina's transit operators collectively generate millions of anonymized mobility data points daily and currently earn $0 from coordinated data licensing — one of the most significant missed revenue opportunities identified in this benchmark.</p>
+          <div class="term-examples"><span class="ex-pill">Singapore LTA DataMall</span><span class="ex-pill">Seoul Metro Smart City partnerships</span><span class="ex-pill">NCDOT statewide: $0 currently</span></div>
+        </div>
+
+        <div class="term-card cat-tech">
+          <div class="term-header">
+            <span class="term-num">14</span>
+            <span class="term-name">Real-Time Crowding Data</span>
+            <span class="term-tag tag-tech">Technology</span>
+          </div>
+          <p class="term-def">Live information on passenger density by vehicle, car, platform, or station used to help riders choose less crowded options before and during their journey. Typically generated by weight sensors in train cars, gate tap counts, or camera-based AI systems.</p>
+          <p class="term-context">Seoul Metro's car-level crowding displays — showing real-time passenger density per individual train car before the train arrives — are a documented world first. WMATA and MTA both have passenger counting infrastructure but do not currently publish real-time crowding data to riders.</p>
+          <div class="term-examples"><span class="ex-pill">Seoul Metro: per-car display on platforms</span><span class="ex-pill">TfL: crowding levels in API</span><span class="ex-pill">WMATA: data exists but not published</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- CUSTOMER EXPERIENCE TERMS -->
+  <div id="cat-ux" style="scroll-margin-top:20px;">
+    <div class="section-label"><div class="dot" style="background:#f59e0b;"></div>Customer Experience Terms</div>
+    <div class="term-grid-wrap">
+      <div class="term-grid">
+
+        <div class="term-card cat-ux">
+          <div class="term-header">
+            <span class="term-num">15</span>
+            <span class="term-name">Silo Integration</span>
+            <span class="term-tag tag-ux">UX</span>
+          </div>
+          <p class="term-def">The degree to which pre-trip, in-trip, and post-trip services are unified across operators, apps, fares, and data systems. A fully integrated system allows a rider to plan, pay, board, transfer, and review a multi-operator journey without switching apps, re-entering information, or losing data continuity between phases.</p>
+          <p class="term-context">This benchmark breaks silo integration into three phases: Pre-Transit (planning, booking, first-mile), During Transit (live updates, crowding, alerts), and Post-Transit (history, loyalty, recommendations). Singapore and Zürich score highest on silo integration; NCDOT scores lowest due to structural fragmentation across dozens of independent operators with no statewide unified platform.</p>
+        </div>
+
+        <div class="term-card cat-ux">
+          <div class="term-header">
+            <span class="term-num">16</span>
+            <span class="term-name">Pre-Transit / During Transit / Post-Transit</span>
+            <span class="term-tag tag-ux">UX</span>
+          </div>
+          <p class="term-def">The three phases of the customer journey used to evaluate data connectivity in this benchmark:</p>
+          <p class="term-def"><strong>Pre-Transit:</strong> Planning, booking, ticket purchase, parking, and first/last-mile arrangements before travel begins.</p>
+          <p class="term-def"><strong>During Transit:</strong> Live status, real-time crowding, delays, alerts, connections, and onboard or in-station information during the trip.</p>
+          <p class="term-def"><strong>Post-Transit:</strong> Trip history, receipts, loyalty, recommendations, feedback, and service recovery after the trip ends.</p>
+          <p class="term-context">No US system in this benchmark achieves "Fully Connected" on all three phases. Singapore and Zürich do.</p>
+        </div>
+
+        <div class="term-card cat-ux">
+          <div class="term-header">
+            <span class="term-num">17</span>
+            <span class="term-name">First/Last Mile Integration</span>
+            <span class="term-tag tag-ux">UX</span>
+          </div>
+          <p class="term-def">Integration of transit with rideshare, bikes, scooters, parking, and walking connections needed to complete the trip from the rider's origin to the transit station, and from the destination station to the rider's final destination. The "first mile" and "last mile" are often the most friction-laden parts of a transit journey.</p>
+          <div class="term-examples"><span class="ex-pill">Singapore: bike-share booking in MyTransport app</span><span class="ex-pill">SBB: car-share in SBB Mobile</span><span class="ex-pill">LA Metro: first/last mile gap is primary UX challenge</span></div>
+        </div>
+
+        <div class="term-card cat-ux">
+          <div class="term-header">
+            <span class="term-num">18</span>
+            <span class="term-name">Unified Digital Front Door</span>
+            <span class="term-tag tag-ux">UX</span>
+          </div>
+          <p class="term-def">A single app or digital interface that lets riders plan, pay, travel, and review their complete journey without switching between systems or tools. The "front door" metaphor captures the idea that riders should have one entry point to the entire transit ecosystem, regardless of how many operators, modes, or agencies are involved in their trip.</p>
+          <div class="term-examples"><span class="ex-pill">Singapore: MyTransport.SG</span><span class="ex-pill">Zürich: SBB Mobile</span><span class="ex-pill">NCDOT: separate apps per operator; GoTriangle GoPass partially integrates Triangle operators</span></div>
+        </div>
+
+        <div class="term-card cat-ux">
+          <div class="term-header">
+            <span class="term-num">19</span>
+            <span class="term-name">Personalization Layer</span>
+            <span class="term-tag tag-ux">UX</span>
+          </div>
+          <p class="term-def">Use of rider journey data to tailor suggestions, alerts, loyalty offers, disruption alternatives, and post-journey recommendations to the individual rider. A personalization layer turns anonymized mobility data into a rider-facing benefit — proactive journey suggestions, relevant alerts, and rewards aligned with actual travel patterns.</p>
+          <p class="term-context">The absence of a personalization layer is a common gap across US systems in this benchmark. OMNY, SmarTrip, and TAP all generate rich journey data that is not currently surfaced to riders in personalized form.</p>
+        </div>
+
+        <div class="term-card cat-ux">
+          <div class="term-header">
+            <span class="term-num">20</span>
+            <span class="term-name">Customer Centricity</span>
+            <span class="term-tag tag-ux">UX</span>
+          </div>
+          <p class="term-def">The degree to which a transit system is designed around the rider's complete journey experience, rather than the operational or administrative boundaries of individual agencies and operators. A customer-centric system prioritizes the rider's perspective across all touchpoints: planning, payment, travel, and follow-up.</p>
+          <p class="term-context">Singapore and Zürich score highest on customer centricity — their systems are designed so that operational complexity is hidden behind a simple rider experience. NCDOT's "multi-operator, multi-app problem" is the clearest benchmark expression of low customer centricity: structural fragmentation across dozens of independent NC operators is directly visible and painful to riders crossing operator boundaries. GoTriangle's GoPass pilot is the most significant step toward rider-centric design in NC.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- RANKING SCALE REFERENCE -->
+  <div id="cat-scale" style="scroll-margin-top:20px;">
+    <div class="section-label"><div class="dot" style="background:#0ea5e9;"></div>Ranking Scale Reference — What 100 and 0 Mean for Each Dimension</div>
+    <div class="term-grid-wrap">
+      <div class="term-grid">
+
+        <div class="term-card cat-scale">
+          <div class="term-header">
+            <span class="term-num">24</span>
+            <span class="term-name">Technology Stack Score (0–100)</span>
+            <span class="term-tag tag-scale">Scale</span>
+          </div>
+          <p class="term-def">Measures the depth and maturity of a transit system's technical infrastructure: real-time data publishing (GTFS-RT), open APIs, mobile ticketing, contactless payment acceptance, AI or predictive tools, and interoperability with third-party platforms.</p>
+          <table class="scale-table">
+            <thead><tr><th>Score</th><th>What it means</th><th>Benchmark example</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="score-100">100</span></td>
+                <td>Full real-time open API suite (GTFS-RT, vehicle positions, alerts), open-loop EMV contactless across all modes, AI-driven disruption prediction, seamless third-party app integration, and a fully interoperable tech platform with no proprietary barriers.</td>
+                <td>No system in this benchmark scores 100. Singapore LTA scores 97 — the closest to this ceiling.</td>
+              </tr>
+              <tr>
+                <td><span class="score-0">0</span></td>
+                <td>No real-time data published externally, no contactless payment, no mobile ticketing, no open APIs, no third-party app support. Riders have access only to static printed schedules and cash fare payment at windows.</td>
+                <td>No benchmarked system reaches 0. NCDOT (40) has the lowest score, primarily due to the absence of a statewide open GTFS-RT portal and no unified contactless fare payment standard across operators.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="term-examples" style="margin-top:10px;"><span class="ex-pill">Singapore: 97</span><span class="ex-pill">Zürich: 94</span><span class="ex-pill">London: 92</span><span class="ex-pill">Seoul: 90</span><span class="ex-pill">MTA: 68</span><span class="ex-pill">NCDOT: 40</span></div>
+        </div>
+
+        <div class="term-card cat-scale">
+          <div class="term-header">
+            <span class="term-num">25</span>
+            <span class="term-name">User Experience (UX) Score (0–100)</span>
+            <span class="term-tag tag-scale">Scale</span>
+          </div>
+          <p class="term-def">Measures how easy and unified the rider experience is — from planning a trip, to paying, boarding, receiving real-time updates, and recovering from disruptions. Rewards systems where operational complexity is hidden behind a simple, consistent interface.</p>
+          <table class="scale-table">
+            <thead><tr><th>Score</th><th>What it means</th><th>Benchmark example</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="score-100">100</span></td>
+                <td>A single app handles planning, payment, live updates, and post-journey review across all modes and operators with zero app-switching. Accessibility, language support, wayfinding, and disruption recovery are fully integrated. Every touchpoint is intuitive and consistent.</td>
+                <td>Zürich SBB scores 96 — riders plan, book, pay, and receive automated delay compensation in a single app across all Swiss national rail and urban transit.</td>
+              </tr>
+              <tr>
+                <td><span class="score-0">0</span></td>
+                <td>No digital rider tools exist. No app, no website trip planner, no real-time information at stations, cash-only payment, and no disruption communication beyond in-station announcements. Riders must navigate entirely without digital support.</td>
+                <td>No benchmarked system is near 0. NCDOT (38) is the lowest, characterized by separate apps per operator, no statewide unified payment, and absent post-journey features across all operators.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="term-examples" style="margin-top:10px;"><span class="ex-pill">Zürich: 96</span><span class="ex-pill">Singapore: 95</span><span class="ex-pill">Tokyo: 90</span><span class="ex-pill">Seoul: 88</span><span class="ex-pill">MTA: 65</span><span class="ex-pill">NCDOT: 38</span></div>
+        </div>
+
+        <div class="term-card cat-scale">
+          <div class="term-header">
+            <span class="term-num">26</span>
+            <span class="term-name">Silo Integration Score (0–100)</span>
+            <span class="term-tag tag-scale">Scale</span>
+          </div>
+          <p class="term-def">Measures how connected the three journey phases are — Pre-Transit (planning &amp; payment), During Transit (live updates &amp; alerts), and Post-Transit (history, loyalty &amp; personalization) — both within one agency and across multiple operators sharing the same network. Also expressed qualitatively: <strong>Best-in-class / High / Medium / Low.</strong></p>
+          <table class="scale-table">
+            <thead><tr><th>Score</th><th>What it means</th><th>Benchmark example</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="score-100">100</span></td>
+                <td>All three journey phases are fully connected in a single platform. Pre-trip planning, real-time in-journey data, and post-journey loyalty are unified across every mode and operator. Data flows seamlessly between phases; no information is lost or siloed when the rider transitions from planning to travel to review.</td>
+                <td>Singapore scores 98 — MyTransport.SG unifies planning, payment, live updates, and journey history across all bus, MRT, and LRT operators. Qualitative label: <strong>Best-in-class.</strong></td>
+              </tr>
+              <tr>
+                <td><span class="score-0">0</span></td>
+                <td>Completely siloed: no data passes between pre-trip planning, the journey itself, and post-journey review. Riders must re-enter information at every phase, alerts are absent during travel, and no record of trips exists afterward. Each operator is an isolated data island with no cross-mode connectivity.</td>
+                <td>No benchmarked system reaches 0. NCDOT scores 28 — the lowest — with no statewide open real-time API, absent post-journey features across all operators, and structural fragmentation across dozens of independent operator systems. Qualitative label: <strong>Low.</strong></td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="term-examples" style="margin-top:10px;"><span class="ex-pill">Singapore: 98 — Best-in-class</span><span class="ex-pill">Zürich: 95 — Best-in-class</span><span class="ex-pill">London: 90 — High</span><span class="ex-pill">MTA: 62 — Medium</span><span class="ex-pill">NCDOT: 28 — Low</span></div>
+        </div>
+
+        <div class="term-card cat-scale">
+          <div class="term-header">
+            <span class="term-num">27</span>
+            <span class="term-name">Revenue Model Score (0–100)</span>
+            <span class="term-tag tag-scale">Scale</span>
+          </div>
+          <p class="term-def">Measures how diversified and self-sustaining a transit system's revenue model is. Rewards systems that generate significant income beyond passenger fares and direct government subsidy — including payment processing fees, retail concessions, property development, data licensing, freight, advertising, and congestion or road pricing revenue.</p>
+          <table class="scale-table">
+            <thead><tr><th>Score</th><th>What it means</th><th>Benchmark example</th></tr></thead>
+            <tbody>
+              <tr>
+                <td><span class="score-100">100</span></td>
+                <td>A fully diversified revenue model where fares are one income stream among many. The agency generates substantial revenue from retail concessions, payment platform fees, real estate development, data licensing, freight operations, and other commercial activities. The system can sustain and invest in operations independent of political budget cycles, with non-fare revenue covering 50%+ of operating costs.</td>
+                <td>No system scores 100. Tokyo JR East (92) comes closest — non-rail revenue (Suica processing fees, Lumine retail, hotels, real estate) exceeds 40% of total revenue.</td>
+              </tr>
+              <tr>
+                <td><span class="score-0">0</span></td>
+                <td>100% dependent on passenger fares and direct government subsidy with zero non-fare commercial revenue. No advertising, no retail, no data licensing, no property income, no payment fees — every dollar comes from the farebox or a government transfer. Completely vulnerable to ridership drops and political budget decisions.</td>
+                <td>No benchmarked system reaches 0. NCDOT (35) is the lowest, earning virtually no coordinated non-fare commercial revenue across its operators. The combined NC transit budget relies ~70–75% on subsidies and ~20–25% on fares, with no statewide payment platform, data licensing program, or coordinated property revenue.</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="term-examples" style="margin-top:10px;"><span class="ex-pill">Tokyo: 92</span><span class="ex-pill">Singapore: 90</span><span class="ex-pill">London: 88</span><span class="ex-pill">Zürich: 85</span><span class="ex-pill">MTA: 75</span><span class="ex-pill">NCDOT: 35</span></div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- BENCHMARK METHODOLOGY -->
+  <div id="cat-governance" style="scroll-margin-top:20px;">
+    <div class="section-label"><div class="dot" style="background:#ef4444;"></div>Benchmark Methodology</div>
+    <div class="term-grid-wrap">
+      <div class="term-grid">
+
+        <div class="term-card cat-governance">
+          <div class="term-header">
+            <span class="term-num">21</span>
+            <span class="term-name">Benchmark Score</span>
+            <span class="term-tag tag-governance">Methodology</span>
+          </div>
+          <p class="term-def">A comparative score assigned within this research framework across four dimensions: Technology Stack, User Experience, Silo Integration, and Revenue Model. Scores are on a 0–100 scale and reflect the research team's assessment based on publicly available information, agency reports, and direct product evaluation.</p>
+          <p class="term-context"><strong>Important:</strong> These scores are internal to the NCDOT Benchmarking Research 2024 study. They are not independently validated external industry ratings, and should not be cited as such. The methodology weights each dimension equally; no external tie-breaking methodology is applied. NCDOT figures represent the statewide coordination picture and are estimated pending verification from NCDOT UPTAS reports and individual operator financials.</p>
+        </div>
+
+        <div class="term-card cat-governance">
+          <div class="term-header">
+            <span class="term-num">22</span>
+            <span class="term-name">New Rail Financing Framework (NRFF)</span>
+            <span class="term-tag tag-governance">Governance</span>
+          </div>
+          <p class="term-def">Singapore's government framework, introduced in 2010, under which the Land Transport Authority (LTA) owns all rail operating assets — trains, tracks, and signaling equipment — and operators pay a license fee to run services. This means the government bears all capital risk, and operators focus purely on service delivery.</p>
+          <p class="term-context">The NRFF fundamentally changes how to interpret Singapore's "high fare recovery": fares cover operating costs in a model where the government has already absorbed the capital investment. Singapore's financial model is not as subsidy-independent as a standalone fare recovery figure suggests.</p>
+        </div>
+
+        <div class="term-card cat-governance">
+          <div class="term-header">
+            <span class="term-num">23</span>
+            <span class="term-name">Bus Contracting Model (BCM)</span>
+            <span class="term-tag tag-governance">Governance</span>
+          </div>
+          <p class="term-def">Singapore's bus financing model, introduced in 2016, under which the government (through LTA) bears all revenue risk — setting fares and absorbing fare volatility — while bus operators are paid a fee to operate services to quality standards. This model insulates operators from ridership risk and gives LTA full control over network planning.</p>
+          <p class="term-context">Together with the NRFF, the BCM means Singapore's government is deeply involved in financing public transit, even though the systems present high fare recovery ratios. This context is essential for fair cross-system comparison.</p>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- SOURCES -->
+  <div class="sources-box">
+    <div class="sb-label">Sources for Glossary Definitions</div>
+    <p><strong>Fare Recovery / Revenue definitions:</strong> WMATA FY2024 Adopted Budget; MTA FY2024 Budget; TfL Annual Report 2023/24; JR East Annual Report; Seoul Metro Annual Statistical Report; Singapore LTA Annual Report; SBB Annual Report; LA Metro FY2024 Adopted Budget; NCDOT PTD (ncdot.gov); NCDOT UPTAS (connect.ncdot.gov). NCDOT figures marked [TO BE VERIFIED] require confirmation before external citation.</p>
+    <p><strong>Technology definitions:</strong> Google GTFS-RT specification (developers.google.com/transit/gtfs-realtime); TfL Open Data Portal (api.tfl.gov.uk); LTA DataMall (datamall.lta.gov.sg); MTA Developer Resources (api.mta.info).</p>
+    <p><strong>Payment systems:</strong> EMV specification (emvco.com); TfL contactless history (tfl.gov.uk/corporate/publications-and-reports); MTA OMNY program (omny.info).</p>
+    <p><strong>Singapore NRFF/BCM:</strong> Singapore Land Transport Authority — New Rail Financing Framework documentation; Bus Contracting Model implementation reports.</p>
+    <p><strong>Open data value:</strong> "Assessing the value of TfL's open data and digital partnerships," Deloitte for TfL, 2017.</p>
+    <p><strong>Benchmark scores:</strong> All scores are internal to NCDOT Benchmarking Research 2024 and are not independently validated external industry ratings.</p>
+  </div>
+
+</div>
+
+<div class="footer" style="padding-bottom:24px;">Made with IBM Bob &nbsp;·&nbsp; NCDOT Benchmarking Research 2024</div>
+
+</body>
+</html>

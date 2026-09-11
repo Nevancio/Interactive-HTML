@@ -1,0 +1,167 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>LA Metro — Transit Profile</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, "Segoe UI", system-ui, sans-serif; background: #f0f4ff; color: #1f2328; font-size: 14px; line-height: 1.7; }
+  .page { max-width: 820px; margin: 0 auto; padding: 40px 24px 60px; }
+  .profile-header { background: linear-gradient(135deg, #c2410c 0%, #f97316 100%); border-radius: 16px; padding: 32px 36px; color: #fff; margin-bottom: 32px; display: flex; align-items: center; gap: 24px; }
+  .profile-flag { font-size: 64px; }
+  .profile-header h1 { font-size: 26px; font-weight: 800; margin-bottom: 4px; }
+  .profile-header .sub { font-size: 13px; color: #fed7aa; margin-bottom: 12px; }
+  .rank-badge { display: inline-block; background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.4); border-radius: 20px; padding: 4px 14px; font-size: 12px; font-weight: 700; }
+  .score-strip { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 32px; }
+  .score-box { background: #fff; border-radius: 12px; padding: 14px 10px; text-align: center; box-shadow: 0 2px 10px rgba(0,0,0,.06); border-top: 4px solid #f97316; }
+  .score-box .sb-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #94a3b8; margin-bottom: 4px; }
+  .score-box .sb-val { font-size: 24px; font-weight: 800; }
+  .score-box .sb-max { font-size: 10px; color: #94a3b8; }
+  .score-box.overall { border-top-color: #f59e0b; background: #fffbeb; }
+  .score-box.overall .sb-val { color: #b45309; }
+  .section { background: #fff; border-radius: 14px; padding: 24px 28px; margin-bottom: 20px; box-shadow: 0 2px 10px rgba(0,0,0,.06); }
+  .section-eyebrow { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .12em; color: #c2410c; margin-bottom: 6px; }
+  .section h2 { font-size: 17px; font-weight: 800; color: #1e293b; margin-bottom: 12px; padding-bottom: 10px; border-bottom: 2px solid #f1f5f9; }
+  .section p { font-size: 13px; color: #374151; margin-bottom: 10px; }
+  .section p:last-child { margin-bottom: 0; }
+  .highlight-item { margin-bottom: 14px; padding-left: 14px; border-left: 3px solid #f97316; }
+  .highlight-item .hi-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: .06em; color: #c2410c; margin-bottom: 3px; }
+  .opp-list { list-style: none; padding: 0; }
+  .opp-list li { padding: 8px 12px 8px 36px; position: relative; font-size: 13px; color: #374151; border-bottom: 1px solid #f8fafc; }
+  .opp-list li:last-child { border-bottom: none; }
+  .opp-list li::before { content: '→'; position: absolute; left: 12px; color: #c2410c; font-weight: 700; }
+  .journey-row { display: flex; gap: 0; margin: 16px 0; }
+  .jp { flex: 1; text-align: center; position: relative; }
+  .jp::after { content: '▶'; position: absolute; right: -8px; top: 50%; transform: translateY(-50%); font-size: 10px; color: #cbd5e1; }
+  .jp:last-child::after { display: none; }
+  .jp-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: #64748b; margin-bottom: 5px; }
+  .jp-dot { width: 16px; height: 16px; border-radius: 50%; margin: 0 auto 5px; }
+  .jp-green { background: #22c55e; } .jp-yellow { background: #f59e0b; } .jp-red { background: #ef4444; }
+  .jp-note { font-size: 10px; color: #64748b; }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0; }
+  .pill { background: #ffedd5; color: #9a3412; border-radius: 20px; font-size: 11px; font-weight: 700; padding: 3px 11px; }
+  .innovation-box { background: #fff7ed; border: 1.5px solid #fdba74; border-radius: 10px; padding: 16px 20px; margin-top: 10px; }
+  .warn-box { background: #fef2f2; border: 1.5px solid #fca5a5; border-radius: 10px; padding: 16px 20px; margin-top: 10px; }
+  .innovation-box p, .warn-box p { font-size: 13px; color: #374151; }
+  .overall-section { background: linear-gradient(135deg, #c2410c, #f97316); border-radius: 14px; padding: 28px; text-align: center; color: #fff; margin-bottom: 20px; }
+  .overall-section .os-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .1em; color: #fed7aa; margin-bottom: 8px; }
+  .overall-section .os-num { font-size: 72px; font-weight: 900; line-height: 1; }
+  .overall-section .os-max { font-size: 18px; color: #fdba74; }
+  .overall-section .os-verdict { font-size: 14px; color: #fed7aa; margin-top: 10px; font-style: italic; }
+  .nav-row { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+  .nav-btn { background: #1e293b; color: #fff; border: none; border-radius: 10px; padding: 10px 22px; font-size: 12px; font-weight: 700; text-decoration: none; display: inline-block; }
+  .nav-btn:hover { background: #334155; }
+  .nav-btn.home { background: #c2410c; }
+  .footer { margin-top: 40px; padding-top: 12px; border-top: 1px solid #e2e8f0; text-align: center; font-size: 11px; color: #94a3b8; }
+</style>
+</head>
+<body>
+<div class="page">
+  <div class="profile-header">
+    <div class="profile-flag">🌴</div>
+    <div>
+      <h1>LA Metro</h1>
+      <div class="sub">Los Angeles County Metropolitan Transportation Authority · USA — Los Angeles</div>
+      <span class="rank-badge">#8 Ranked Globally</span>
+    </div>
+  </div>
+  <div class="score-strip">
+    <div class="score-box"><div class="sb-label">Technology</div><div class="sb-val" style="color:#f59e0b">62</div><div class="sb-max">/100</div></div>
+    <div class="score-box"><div class="sb-label">User Experience</div><div class="sb-val" style="color:#f59e0b">60</div><div class="sb-max">/100</div></div>
+    <div class="score-box"><div class="sb-label">Silo Integration</div><div class="sb-val" style="color:#f59e0b">55</div><div class="sb-max">/100</div></div>
+    <div class="score-box"><div class="sb-label">Revenue Model</div><div class="sb-val" style="color:#f59e0b">65</div><div class="sb-max">/100</div></div>
+    <div class="score-box overall"><div class="sb-label">Overall</div><div class="sb-val">60</div><div class="sb-max">/100</div></div>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">World-Class Experience Characteristics</div>
+    <h2>A System Transforming Against the Grain of Car Culture</h2>
+    <p>LA Metro operates in the most challenging environment of any system in this benchmark: a sprawling, car-centric metropolitan area of 10 million people where transit has historically been an afterthought of urban planning. Despite this structural disadvantage, LA Metro has embarked on one of the most ambitious transit expansion programs in US history — adding 100+ miles of rail and BRT lines in preparation for the 2028 LA Olympics. The scale of this transformation, funded primarily by dedicated sales tax revenue, is reshaping what transit means in Los Angeles.</p>
+    <p>LA Metro's GoPass program — offering integrated ticketing across 20+ transit agencies in the LA region — is one of the most ambitious multi-agency fare integration initiatives in the US. While still maturing, GoPass represents the kind of regional cooperation that NCDOT's independent operators — GoRaleigh, GoTriangle, GoCary, GoDurham, CATS, Greensboro Transit, and others — need to achieve statewide. Note: North Carolina already uses "GoPass" branding for the GoTriangle regional fare product (built on UMO); the LA Metro GoPass is a separate initiative. Source: <a href="https://gotriangle.org/fares-and-passes/" style="color:#c2410c;">GoTriangle GoPass/UMO</a></p>
+    <div class="highlight-item">
+      <div class="hi-label">Technology Stack</div>
+      <p>TAP card system accepted across Metro, municipal bus operators, and Metrolink commuter rail. GoLA app consolidating multi-modal journey planning. GTFS-RT feeds for rail and bus. GoPass multi-agency integrated ticketing pilot across 20+ operators. Express Lanes dynamic pricing data integration feeding into journey planner. LA28 Olympics infrastructure upgrades accelerating digital modernization.</p>
+    </div>
+    <div class="highlight-item">
+      <div class="hi-label">User Experience</div>
+      <p>TAP card's multi-agency acceptance is the system's strongest UX asset — a single card works across Metro rail, Metro bus, and many municipal operators. The GoLA app is improving but remains inconsistent in real-time data quality. LA Metro's station environments are generally modern and well-maintained on newer lines (Expo, Crenshaw), though older stations show deferred maintenance. Wayfinding quality varies significantly by line age.</p>
+    </div>
+    <div class="highlight-item">
+      <div class="hi-label">First/Last Mile Challenge</div>
+      <p>LA Metro's single largest UX challenge is the first/last mile gap. In a car-centric city with low-density land use patterns, getting to and from transit stations without a car remains difficult for most potential riders. The absence of deep e-scooter, e-bike, and rideshare integration in the GoLA app means riders face a fragmented multi-app experience for complete journey planning.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Opportunity Areas</div>
+    <h2>Where LA Metro Must Improve</h2>
+    <ul class="opp-list">
+      <li>Upgrade TAP to open-loop contactless EMV acceptance — requiring a proprietary agency card creates onboarding friction for tourists and occasional riders, especially given LA's global tourism industry.</li>
+      <li>Deepen first/last mile integration: e-scooter, e-bike, and rideshare booking must be seamlessly embedded in GoLA to address LA's unique low-density geography.</li>
+      <li>Build real-time crowding data into GoLA — this data gap is particularly painful in LA where riders often avoid transit due to uncertainty about crowding conditions.</li>
+      <li>Complete GoPass rollout and expand to cover all LA basin operators — the 20+ agency fragmentation is the primary data silo problem LA Metro must solve.</li>
+      <li>Develop a post-journey loyalty and sustainability tracking layer to reward consistent transit use over car travel.</li>
+    </ul>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Centricity on Customer Needs</div>
+    <h2>Building a Transit Culture in a Car Capital</h2>
+    <p>LA Metro's customer centricity challenge is unlike any other system in this benchmark: it must persuade a population that has built its entire lifestyle around automobile use to consider transit as a genuine alternative. This requires not just a good app — it requires a fundamentally different value proposition than what transit typically offers. LA Metro has responded with free fare programs (Metro Micro, student ridership programs), high-frequency service on key corridors, and a focus on station design that projects confidence rather than necessity.</p>
+    <p>The Olympics acceleration effect is real: LA28 is driving federal investment in transit infrastructure, improved airport connections, and digital experience upgrades that would otherwise take a decade to achieve. LA Metro is explicitly using the Olympic deadline as a forcing function to compress transformation timelines. North Carolina has no single equivalent mega-event, but the Research Triangle and Charlotte metro areas are among the fastest-growing in the United States — population pressure, traffic congestion, and corporate relocations (notably the Research Triangle Park ecosystem) provide a sustained forcing function that can be used similarly to advocate for statewide transit investment.</p>
+    <div class="warn-box">
+      <p><strong>Key Gap:</strong> LA Metro's GoLA app UX lags significantly behind what a car-replacement transit experience requires. For transit to compete with driving in LA, the app experience needs to be not just equivalent to car navigation apps — it needs to be demonstrably better. Currently, Google Maps provides a superior multimodal journey experience in LA than LA Metro's own digital properties.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Commerce &amp; Revenue Generation</div>
+    <h2>Sales Tax Innovation — The US Model for Dedicated Transit Funding</h2>
+    <p>LA Metro's revenue model is notable for one thing above all others: dedicated sales tax funding through voter-approved ballot measures. Measure M (2016) and Measure R (2008) together generate approximately $2 billion annually in dedicated transit capital and operating funding, insulating LA Metro from annual budget battles that constrain agencies like NCDOT's supported operators and WMATA. This is arguably the single most directly applicable revenue model for North Carolina: Charlotte/Mecklenburg County already operates a transit sales tax supporting CATS — the CATS model is NC's closest existing analog to Measure M. Source: <a href="https://www.ncdot.gov/about-us/how-we-operate/finance-budget/nc-first/Documents/cats-transit-funding-report.pdf" style="color:#c2410c;">CATS Transit Funding Report (NCDOT/NC FIRST)</a></p>
+    <div class="pill-row">
+      <span class="pill">Fare Revenue</span>
+      <span class="pill">Sales Tax (Measure M + R)</span>
+      <span class="pill">Federal/State Grants</span>
+      <span class="pill">Express Lanes Tolls</span>
+      <span class="pill">Transit-Oriented Development</span>
+      <span class="pill">Advertising</span>
+    </div>
+    <p>Express Lanes tolls on I-10 and I-110 generate direct revenue while simultaneously making transit more competitive by slowing adjacent freeway traffic. North Carolina's I-77 South Express Lanes (Charlotte area) and I-540 (Raleigh/Triangle) are directly analogous toll infrastructure that could similarly be structured to direct a portion of toll revenue to regional transit capital. Sources: <a href="https://ncdot.gov/projects/i-77-south-express-lanes/Documents/i-77-south-rfq.pdf" style="color:#c2410c;">I-77 South Express Lanes (NCDOT)</a> · <a href="https://www.ncdot.gov/divisions/turnpike/investor/Documents/fy-2025-budget-report.pdf" style="color:#c2410c;">NC Turnpike Authority FY2025 Budget</a>. Transit-oriented development partnerships — building residential and commercial projects above and adjacent to stations — are generating long-term ground lease and sale revenue, a model applicable to Raleigh Union Station, Charlotte Center City Transit Station, and Durham Station in NC.</p>
+    <div class="innovation-box">
+      <p><strong>Key Stat:</strong> LA Metro annual budget approximately $7 billion (operating budget in benchmarked period; verify total including capital against LA Metro FY2024 Adopted Budget). Fare recovery ~18% as cited in this benchmark — verify against LA Metro FY2023/24 audited financials. Measure M alone generates approximately $860 million per year in dedicated funding. Express Lanes toll revenue growing. LA28 Olympics expected to drive $3B+ in federal infrastructure investment. Source: LA Metro FY2024 Adopted Budget; Measure M spending plan.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Data Silo Connectivity — Pre · During · Post Transit</div>
+    <h2>Partial Connectivity — Post-Journey Absent</h2>
+    <div class="journey-row">
+      <div class="jp"><div class="jp-label">Pre-Transit</div><div class="jp-dot jp-yellow"></div><div class="jp-note">⚠️ Partial</div></div>
+      <div class="jp"><div class="jp-label">During Transit</div><div class="jp-dot jp-yellow"></div><div class="jp-note">⚠️ Partial</div></div>
+      <div class="jp"><div class="jp-label">Post-Transit</div><div class="jp-dot jp-red"></div><div class="jp-note">❌ Fragmented</div></div>
+    </div>
+    <p><strong>Pre-Transit:</strong> TAP purchase works. GoLA app provides basic multi-modal planning but first/last mile integration is fragmented. 20+ agency trip planning requires app-switching.</p>
+    <p><strong>During Transit:</strong> GTFS-RT available for rail and key bus lines. Real-time crowding absent. App UX inconsistent. Express Lanes data partially integrated.</p>
+    <p><strong>Post-Transit:</strong> No post-journey engagement, analytics, loyalty, or AI recommendations exist. TAP transaction data is captured but not surfaced to riders.</p>
+  </div>
+  <div class="section">
+    <div class="section-eyebrow">Notable Innovation</div>
+    <h2>GoPass: Multi-Agency Integration at Scale</h2>
+    <div class="innovation-box">
+      <p>LA Metro's GoPass initiative — integrating TAP card acceptance across 20+ independent transit operators in the LA basin — is the most ambitious multi-agency fare integration project in the US outside of the DC region's SmarTrip program. GoPass directly addresses the fragmentation problem: a rider traveling from the San Fernando Valley via a municipal bus, Metro rail, and a coastal shuttle currently needs multiple fare instruments. GoPass collapses these into one. The technical and political challenges of achieving this across 20 independent agencies in car-centric LA make it an underappreciated achievement — and a direct model for what North Carolina needs: a statewide version of GoPass that spans the Triangle (GoTriangle, GoCary, GoDurham), Charlotte (CATS), Greensboro, and intercity Piedmont/Carolinian rail connections. The Triangle's GoTriangle GoPass/UMO pilot is already the NC seed of this model. Source: <a href="https://gotriangle.org/fares-and-passes/" style="color:#c2410c;">GoTriangle GoPass/UMO</a></p>
+    </div>
+  </div>
+  <div class="overall-section">
+    <div class="os-label">Overall Benchmarking Score</div>
+    <div class="os-num">60<span class="os-max">/100</span></div>
+    <div class="os-verdict">"Building transit in the world's car capital — the dedicated sales tax model and GoPass multi-agency integration are genuine innovations worth studying. LA28 is the forcing function."</div>
+  </div>
+  <div class="nav-row">
+    <span style="font-size:12px;color:#94a3b8;">8 of 9 · LA Metro</span>
+    <div style="display:flex;gap:10px;">
+      <a class="nav-btn" href="wmata-dc.html">← WMATA DC</a>
+      <a class="nav-btn home" href="../one-pager-benchmarking-NCDOT.html">Rankings</a>
+      <a class="nav-btn" href="../revenue-deep-dive.html" style="background:#059669;">Revenue Deep Dive</a>
+      <a class="nav-btn" href="ncdot.html">Next: NCDOT →</a>
+    </div>
+  </div>
+  <div class="footer">Made with IBM Bob · NCDOT Benchmarking Research 2024</div>
+</div>
+</body>
+</html>
